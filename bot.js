@@ -4,6 +4,8 @@ const qrcode = require("qrcode-terminal")
 const { MongoStore } = require("wwebjs-mongo")
 const mongoose = require("mongoose")
 
+const logHabits = require("./handlers/logHabits")
+
 mongoose.connect(process.env.MONGODB_URI).then(() => {
   const store = new MongoStore({ mongoose: mongoose })
 
@@ -15,7 +17,7 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
   })
 
   client.once("ready", () => {
-    console.log("Client is ready!")
+    console.log("ProDOS Habit Tracker is ready!")
   })
 
   client.on("qr", (qr) => {
@@ -24,14 +26,8 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
     qrcode.generate(qr, { small: true })
   })
 
-  client.on("message_create", (message) => {
-    console.log(message.body)
-  })
-
-  client.on("message", (message) => {
-    if (message.body === "ping") {
-      message.reply("🏓 Pong! (RemoteAuth working!)")
-    }
+  client.on("message", async (message) => {
+    await logHabits(client, message)
   })
   client.initialize()
 })
