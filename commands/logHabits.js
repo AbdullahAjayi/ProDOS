@@ -4,8 +4,6 @@ const { formatDate } = require("../utils/helpers")
 module.exports = async (client, message) => {
   const args = message.body.split(" ")
 
-  if (args[0].toLowerCase() !== "log") return
-
   const habitName = args.slice(1).join(" ").trim()
 
   if (!habitName) {

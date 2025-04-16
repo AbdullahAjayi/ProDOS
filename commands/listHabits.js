@@ -2,11 +2,6 @@ const Habits = require("../models/habits")
 const { formatDate } = require("../utils/helpers")
 
 module.exports = async (client, message) => {
-  const command = message.body.toLowerCase()
-
-  // if command does not start with "habits" and does not include "list habits" return
-  if (!command.startsWith("habits") && !command.startsWith("list habits")) return
-
   try {
     const habits = await Habits.find({ userId: message.from }).sort({ lastLogged: -1 })
 
@@ -34,6 +29,8 @@ module.exports = async (client, message) => {
     await message.reply(response)
   } catch (error) {
     console.error("Error fetching habits:", error)
-    message.reply("❌ An error occurred while fetching your habits. Please try again.")
+    await message.reply(
+      "❌ An error occurred while fetching your habits. Please try again."
+    )
   }
 }
