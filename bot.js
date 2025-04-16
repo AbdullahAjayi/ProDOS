@@ -5,6 +5,7 @@ const { MongoStore } = require("wwebjs-mongo")
 const mongoose = require("mongoose")
 
 const logHabits = require("./handlers/logHabits")
+const listHabits = require("./handlers/listHabits")
 
 mongoose.connect(process.env.MONGODB_URI).then(() => {
   const store = new MongoStore({ mongoose: mongoose })
@@ -28,6 +29,7 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
 
   client.on("message", async (message) => {
     await logHabits(client, message)
+    await listHabits(client, message)
   })
   client.initialize()
 })
