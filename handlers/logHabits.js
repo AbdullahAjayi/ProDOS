@@ -1,14 +1,15 @@
 const Habit = require("../models/habits")
+const { formatDate } = require("../utils/helpers")
 
 module.exports = async (client, message) => {
   const args = message.body.split(" ")
 
-  if (args[0].toLowerCase() !== "!log") return
+  if (args[0].toLowerCase() !== "log") return
 
   const habitName = args.slice(1).join(" ").trim()
 
   if (!habitName) {
-    return message.reply(`*Please provide a habit name to log.*\nExample: !log excercise`)
+    return message.reply("*Please provide a habit name to log.*\nExample: log excercise")
   }
 
   try {
@@ -26,11 +27,10 @@ module.exports = async (client, message) => {
     )
 
     // success message
-    const lastLogged = habit.lastLogged?.toDateString() || "This is your first log!"
     message.reply(
-      `✅ *${habitName}* logged!\n` +
+      `✅ *${habitName.charAt(0).toUpperCase() + habit.name.slice(1)}* logged!\n` +
         `📅 Streak: ${habit.streak} days\n` +
-        `⏱️ Last logged: ${lastLogged}`
+        `⏱️ Last logged: ${formatDate(habit.lastLogged)}`
     )
   } catch (error) {
     console.error("Error logging habit:", error)
