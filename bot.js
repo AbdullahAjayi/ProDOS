@@ -4,9 +4,11 @@ const qrcode = require("qrcode-terminal")
 const { MongoStore } = require("wwebjs-mongo")
 const mongoose = require("mongoose")
 
-const logHabits = require("./commands/logHabits")
-const listHabits = require("./commands/listHabits")
-const onboarding = require("./commands/onboarding")
+const routes = {
+  ".log": require("./commands/logHabits"),
+  ".list": require("./commands/listHabts"),
+  ".onboarding": require("./commands/onboarding"),
+}
 
 mongoose.connect(process.env.MONGODB_URI).then(() => {
   const store = new MongoStore({ mongoose: mongoose })
@@ -29,9 +31,14 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
   })
 
   client.on("message", async (message) => {
-    await logHabits(client, message)
-    await listHabits(client, message)
-    await onboarding(client, message)
+    const isCommand = message.body.startsWith(".")
+    const command = message.body.split(" ")[0].toLowerCase()
+
+    if (isCommand && routes[command]) {
+      await routes[command](client, message)
+    } else {
+      // fallback for non-command text, maybe AI later
+    }
   })
   client.initialize()
 })
