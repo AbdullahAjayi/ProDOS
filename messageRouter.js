@@ -18,8 +18,6 @@ module.exports = async (client, message) => {
     const handled = await handler(client, message)
     if (handled) {
       break
-    } else {
-      await message.reply("I haven't learned how to do that yet. Please try again later.")
     }
   }
 }
