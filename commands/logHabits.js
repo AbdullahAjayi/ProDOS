@@ -1,4 +1,5 @@
-const Habit = require("../models/habits")
+const safeReply = require("../handlers/safeReply")
+const Habit = require("../models/habit")
 const { formatDate } = require("../utils/helpers")
 
 module.exports = async (client, message) => {
@@ -25,13 +26,18 @@ module.exports = async (client, message) => {
     )
 
     // success message
-    message.reply(
+    const successMessage =
       `✅ *${habitName.charAt(0).toUpperCase() + habit.name.slice(1)}* logged!\n` +
-        `📅 Streak: ${habit.streak} days\n` +
-        `⏱️ Last logged: ${formatDate(habit.lastLogged)}`
-    )
+      `📅 Streak: ${habit.streak} days\n` +
+      `⏱️ Last logged: ${formatDate(habit.lastLogged)}`
+
+    await safeReply(client, message, successMessage)
   } catch (error) {
     console.error("Error logging habit:", error)
-    message.reply("❌ An error occurred while logging your habit. Please try again.")
+    await safeReply(
+      client,
+      message,
+      "❌ An error occurred while logging your habit. Please try again."
+    )
   }
 }
