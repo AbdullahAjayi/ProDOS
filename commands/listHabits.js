@@ -1,9 +1,9 @@
-const Habits = require("../models/habits")
+const Habit = require("../models/habit")
 const { formatDate } = require("../utils/helpers")
 
 module.exports = async (client, message) => {
   try {
-    const habits = await Habits.find({ userId: message.from }).sort({ lastLogged: -1 })
+    const habits = await Habit.find({ userId: message.from }).sort({ lastLogged: -1 })
 
     // handle empty habits
 
