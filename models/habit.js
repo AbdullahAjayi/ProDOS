@@ -28,6 +28,28 @@ const habitSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    type: {
+      type: String,
+      enum: ["yesno", "measurable"],
+      default: "yesno",
+    },
+    target: {
+      type: Number,
+      default: null,
+    },
+    unit: {
+      type: String,
+      default: null,
+    },
+    frequency: {
+      type: String,
+      enum: ["daily", "weekly", "monthly"],
+      default: "daily",
+    },
+    reminderTime: {
+      type: String,
+      default: null, // store as 'HH:mm'
+    },
   },
   { timestamps: true }
 )
