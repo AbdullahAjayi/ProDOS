@@ -5,6 +5,10 @@ const { MongoStore } = require("wwebjs-mongo")
 const mongoose = require("mongoose")
 const messageRouter = require("./messageRouter")
 
+const findOrCreateUser = require("./handlers/onboarding")
+const safeReply = require("./handlers/safeReply")
+const User = require("./models/user")
+
 mongoose.connect(process.env.MONGODB_URI).then(() => {
   const store = new MongoStore({ mongoose: mongoose })
 
@@ -25,6 +29,28 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
     qrcode.generate(qr, { small: true })
   })
 
-  client.on("message", (message) => messageRouter(client, message))
+  client.on("message", async (message) => {
+    const user = await findOrCreateUser(message.from, message._data.notifyName || "User")
+
+    const WELCOME_MSG =
+      "👋🏽 Hey there! I’m *ProDOS* — your WhatsApp productivity partner.\n" +
+      "Ready to help you build habits, set reminders, and hit your goals 🚀\n\n" +
+      "*Here are a few commands to get started:*\n" +
+      "* *log* — log a new habit\n" +
+      "* *reminder* — set habit reminders\n" +
+      "* *list habits* — view your habits\n" +
+      "* *delete* — delete a habit\n\n" +
+      "Just type any of the commands above and let’s go! 💪🏽"
+
+    if (!user.onboarded) {
+      await safeReply(client, message, WELCOME_MSG)
+      user.onboarded = true
+      await user.save()
+
+      return
+    }
+
+    messageRouter(client, message)
+  })
   client.initialize()
 })
