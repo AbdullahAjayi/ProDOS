@@ -2,7 +2,7 @@ const safeReply = require("../handlers/safeReply")
 const User = require("../models/user")
 
 const WELCOME_MSG =
-  "Hi there! I'm ProDOS, your WhatsApp productivity partner.\nHow can I assist you today? You can ask me to log your habits, set reminders, or check your progress. Just type 'help' for a list of commands."
+  "Hi there! I'm ProDOS, your WhatsApp productivity partner.\n\nHow can I assist you today?\n\nYou can ask me to log your habits, set reminders, or check your progress. \n\n Just type 'help' for a list of commands."
 
 /* for .help:
     *Here are a list of commands you can use to get started:
