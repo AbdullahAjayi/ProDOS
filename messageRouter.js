@@ -1,6 +1,7 @@
 const commands = {
   log: require("./commands/logHabits"),
   list: require("./commands/listHabits"),
+  help: require("./commands/help"),
 }
 
 const fallbacks = [require("./fallbacks/hiHandler")]
@@ -21,3 +22,5 @@ module.exports = async (client, message) => {
     }
   }
 }
+
+module.exports.commands = commands
