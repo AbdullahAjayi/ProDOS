@@ -2,6 +2,7 @@ const commands = {
   log: require("./commands/logHabits"),
   list: require("./commands/listHabits"),
   help: require("./commands/help"),
+  create: require("./commands/create"),
 }
 
 const fallbacks = [require("./fallbacks/hiHandler")]
