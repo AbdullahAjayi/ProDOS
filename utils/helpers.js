@@ -1,7 +1,12 @@
 const formatDate = (date, locale = "en-US") => {
+  if (!date) {
+    console.warn("No date provided to formatDate")
+    return "N/A"
+  }
+
   const parsedDate = typeof date === "string" ? new Date(date) : date
 
-  if (isNaN(parsedDate)) {
+  if (!(parsedDate instanceof Date) || isNaN(parsedDate)) {
     console.error("Invalid date:", date)
     return "Invalid date"
   }
