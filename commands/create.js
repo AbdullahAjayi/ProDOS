@@ -1,16 +1,16 @@
-const safeReply = require("handlers/safeReply")
-const Habit = require("models/Habit")
+const safeReply = require("../handlers/safeReply")
+const Habit = require("../models/habit")
 
-const userStates = {}
+const userStates = require("../state/session")
 
 module.exports = async (client, message) => {
   const userId = message.from
   const userState = userStates[userId] || {}
   const input = message.body.trim().toLowerCase()
 
-  const habitName = inputsplit(" ").slice(1).join("_").trim()
+  const habitName = input.split(" ").slice(1).join("_").trim()
 
-  if (!habitName) {
+  if (!habitName && !userState.step) {
     return safeReply(
       client,
       message,
@@ -22,8 +22,11 @@ module.exports = async (client, message) => {
 
   try {
     if (!userState.step) {
-      userState[userId] = { step: "typePropmpt", habitName }
-      console.log("Step: typePrompt | Habit Name:", userStates[userId].habitName)
+      userState.step = "typePrompt"
+      userState.habitName = habitName
+      userStates[userId] = userState
+
+      console.log("Step: typePrompt | Habit Name:", userState.habitName)
       return safeReply(
         client,
         message,
@@ -33,8 +36,10 @@ module.exports = async (client, message) => {
 
     if (userState.step === "typePrompt") {
       if (input === "1" || input === "yes-or-no") {
-        userStates[userId].type = "boolean"
-        userStates[userId].step = "frequency"
+        userState.type = "boolean"
+        userState.step = "frequency"
+        userStates[userId] = userState
+
         console.log("selected type: boolean")
         return safeReply(
           client,
@@ -42,8 +47,10 @@ module.exports = async (client, message) => {
           "How frequent do you want to track this habit?\n\n1. Daily\n2. Weekly\n3. Monthly"
         )
       } else if (input === "2" || input === "measurable") {
-        userStates[userId].type = "measurable"
-        userStates[userId].step = "frequency"
+        userState.type = "measurable"
+        userState.step = "frequency"
+        userStates[userId] = userState
+
         console.log("selected type: measurable")
         return safeReply(
           client,
@@ -67,8 +74,9 @@ module.exports = async (client, message) => {
           "Please select a number between 1 and 3 for frequency."
         )
       }
-      userStates[userId].frequency = freq
-      userStates[userId].step = "reminderTime"
+      userState.frequency = freq
+      userState.step = "reminderTime"
+      userStates[userId] = userState
 
       return safeReply(
         client,
@@ -89,7 +97,7 @@ module.exports = async (client, message) => {
       }
 
       // save final habit
-      const { habitName, type, frequency } = userStates[userId]
+      const { habitName, type, frequency } = userState
       const habit = new Habit({
         userId: message.from,
         name: habitName,
@@ -97,7 +105,7 @@ module.exports = async (client, message) => {
         frequency,
         reminderTime: input,
         streak: 0,
-        lastLogged: null,
+        lastLogged: new Date(),
         phone: message.from.replace(/@.+/, ""),
       })
       await habit.save()
@@ -112,6 +120,7 @@ module.exports = async (client, message) => {
     }
   } catch (error) {
     console.error("Error in habit creation", error)
+    delete userStates[userId]
     return safeReply(
       client,
       message,
