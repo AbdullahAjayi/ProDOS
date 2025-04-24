@@ -6,8 +6,18 @@ const commands = {
 }
 
 const fallbacks = [require("./fallbacks/hiHandler")]
+const userStates = require("./state/session")
 
 module.exports = async (client, message) => {
+  const userId = message.from
+
+  // Check if user has an ongoing state (e.g., during create habit flow)
+  const userState = userStates[userId]
+  if (userState && userState.step) {
+    return commands.create(client, message) // Always route to 'create' during stateful flow
+  }
+
+  // Otherwise route normally
   let commandKey = message.body.split(" ")[0].toLowerCase()
   commandKey = commandKey.startsWith(".") ? commandKey.slice(1) : commandKey
 
