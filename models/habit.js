@@ -30,7 +30,7 @@ const habitSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["yesno", "measurable"],
+      enum: ["boolean", "measurable"],
       default: "yesno",
     },
     target: {
