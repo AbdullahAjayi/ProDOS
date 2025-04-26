@@ -8,6 +8,16 @@ module.exports = async (client, message) => {
   const userState = userStates[userId] || {}
   const input = message.body.trim().toLowerCase()
 
+  // Set a timeout to delete userState after a long period of inactivity
+  if (userState.timeout) {
+    clearTimeout(userState.timeout)
+  }
+
+  userState.timeout = setTimeout(() => {
+    console.log(`Deleting user state for userId: ${userId} due to inactivity.`)
+    delete userStates[userId]
+  }, 30 * 60 * 1000) // 30 minutes
+
   const habitName = input.split(" ").slice(1).join("_").trim()
 
   if (!habitName && !userState.step) {
