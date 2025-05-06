@@ -52,11 +52,11 @@ module.exports = async (client, message) => {
 
   try {
     if (!userState.step) {
-      userState.step = "typePrompt"
+      userState.step = "typeOfHabitPrompt"
       userState.habitName = habitName
       userStates[userId] = userState
 
-      console.log("Step: typePrompt | Habit Name:", userState.habitName)
+      console.log("Step: typeOfHabitPrompt | Habit Name:", userState.habitName)
       return safeReply(
         client,
         message,
@@ -64,7 +64,8 @@ module.exports = async (client, message) => {
       )
     }
 
-    if (userState.step === "typePrompt") {
+    // type of habit prompt logic
+    if (userState.step === "typeOfHabitPrompt") {
       if (input === "1" || input === "yes-or-no") {
         userState.type = "boolean"
         userState.step = "frequency"
@@ -95,6 +96,7 @@ module.exports = async (client, message) => {
       }
     }
 
+    // habit frequency logic
     if (userState.step === "frequency") {
       const freqOptions = {
         1: "daily",
@@ -104,7 +106,7 @@ module.exports = async (client, message) => {
         weekly: "weekly",
         monthly: "monthly",
       }
-      const freq = freqOptions[input]
+      const freq = freqOptions[input.toLowerCase()]
       if (input === "exit") {
         return exitCommand()
       }
@@ -120,25 +122,86 @@ module.exports = async (client, message) => {
       userState.step = "reminderTime"
       userStates[userId] = userState
 
-      return safeReply(
-        client,
-        message,
-        "What time do you want to be reminded each day? (e.g. 7:00 AM"
-      )
-    }
-
-    if (userState.step === "reminderTime") {
-      if (input === "exit") {
-        return exitCommand()
-      }
-      const timeRegex = /^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i
-      if (!timeRegex.test(message.body.trim())) {
-        console.log("Invalid time input:", input)
+      if (userState.frequency === "daily") {
         return safeReply(
           client,
           message,
-          "⏱️ Please enter a valid time in the format HH:MM AM/PM (e.g. 7:00 AM)"
+          "What time do you want to be reminded each day? (e.g. 7:00 AM)"
         )
+      }
+      if (userState.frequency === "weekly") {
+        return safeReply(
+          client,
+          message,
+          "What day of the week do you wish to be reminded? (e.g. Saturday)"
+        )
+      }
+      if (userState.frequency === "daily") {
+        return safeReply(
+          client,
+          message,
+          "What date of the month do you wish to be reminded? (e.g. 21st)"
+        )
+      }
+    }
+
+    // reminder time logic
+    if (userState.step === "reminderTime") {
+      let reminderTime
+
+      // when user types exit
+      if (input === "exit") {
+        return exitCommand()
+      }
+
+      // Daily reminder logic
+      if (userState.frequency === "daily") {
+        const timeRegex = /^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i
+        if (!timeRegex.test(message.body.trim())) {
+          console.log("Invalid time input:", input)
+          return safeReply(
+            client,
+            message,
+            "⏱️ Please enter a valid time in the format HH:MM AM/PM (e.g. 7:00 AM)"
+          )
+        }
+        reminderTime = input
+      }
+
+      // Weekly reminder logic
+      if (userState.frequency === "weekly") {
+        const validDays = [
+          "sunday",
+          "monday",
+          "tuesday",
+          "wednesday",
+          "thursday",
+          "friday",
+          "saturday",
+        ]
+        if (!validDays.include(input.toLowerCase())) {
+          console.log("Invalid day input:", input)
+          return safeReply(
+            client,
+            message,
+            "📅 Please enter a valid day of the week (e.g. Monday)."
+          )
+        }
+        reminderTime = input.charAt(0).toUpperCase() + input.slice(1).toLowerCase()
+      }
+
+      // Monthly reminder logic
+      if (userState.frequency === "monthly") {
+        const dateRegex = /^(0?[1-9]|[12][0-9]|3[01])(st|nd|rd|th)?$/i
+        if (!dateRegex.test(input.trim())) {
+          console.log("Invalid date input:", input)
+          return safeReply(
+            client,
+            message,
+            "📅 Please enter a valid date of the month (e.g. 21st, 5th)."
+          )
+        }
+        reminderTime = input
       }
 
       // save final habit
@@ -148,19 +211,28 @@ module.exports = async (client, message) => {
         name: habitName,
         type,
         frequency,
-        reminderTime: input,
+        reminderTime,
         streak: 0,
         lastLogged: new Date(),
         phone: message.from.replace(/@.+/, ""),
       })
       await habit.save()
 
+      // delete userState globally when done
       delete userStates[userId]
 
       return safeReply(
         client,
         message,
-        `✅ *${habit.name}* has been created as a ${type} habit tracked ${frequency}.\nWe'll remind you at ${input}!`
+        `✅ *${
+          habit.name
+        }* has been created as a ${type} habit tracked ${frequency}.\nWill remind you ${
+          userState.frequency === "daily"
+            ? `by ${input} daily`
+            : userState.frequency === "weekly"
+            ? `on ${input} weekly`
+            : `on the ${input}`
+        }!`
       )
     }
   } catch (error) {
