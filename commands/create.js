@@ -6,7 +6,7 @@ const userStates = require("../state/session")
 module.exports = async (client, message) => {
   const userId = message.from
   const userState = userStates[userId] || {}
-  const input = message.body.trim().toLowerCase()
+  const input = message.body.trim()
 
   const exitCommand = () => {
     delete userStates[userId]
@@ -118,25 +118,24 @@ module.exports = async (client, message) => {
           "Please select a number between 1 and 3 for frequency."
         )
       }
+
       userState.frequency = freq
       userState.step = "reminderTime"
       userStates[userId] = userState
 
-      if (userState.frequency === "daily") {
+      if (freq === "daily") {
         return safeReply(
           client,
           message,
           "What time do you want to be reminded each day? (e.g. 7:00 AM)"
         )
-      }
-      if (userState.frequency === "weekly") {
+      } else if (freq === "weekly") {
         return safeReply(
           client,
           message,
           "What day of the week do you wish to be reminded? (e.g. Saturday)"
         )
-      }
-      if (userState.frequency === "daily") {
+      } else {
         return safeReply(
           client,
           message,
@@ -149,7 +148,7 @@ module.exports = async (client, message) => {
     if (userState.step === "reminderTime") {
       let reminderTime
 
-      // when user types exit
+      // when user types 'exit'
       if (input === "exit") {
         return exitCommand()
       }
@@ -157,7 +156,7 @@ module.exports = async (client, message) => {
       // Daily reminder logic
       if (userState.frequency === "daily") {
         const timeRegex = /^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i
-        if (!timeRegex.test(message.body.trim())) {
+        if (!timeRegex.test(input)) {
           console.log("Invalid time input:", input)
           return safeReply(
             client,
@@ -179,7 +178,7 @@ module.exports = async (client, message) => {
           "friday",
           "saturday",
         ]
-        if (!validDays.include(input.toLowerCase())) {
+        if (!validDays.includes(input.toLowerCase())) {
           console.log("Invalid day input:", input)
           return safeReply(
             client,
@@ -193,7 +192,7 @@ module.exports = async (client, message) => {
       // Monthly reminder logic
       if (userState.frequency === "monthly") {
         const dateRegex = /^(0?[1-9]|[12][0-9]|3[01])(st|nd|rd|th)?$/i
-        if (!dateRegex.test(input.trim())) {
+        if (!dateRegex.test(input)) {
           console.log("Invalid date input:", input)
           return safeReply(
             client,
@@ -224,14 +223,14 @@ module.exports = async (client, message) => {
       return safeReply(
         client,
         message,
-        `✅ *${
-          habit.name
-        }* has been created as a ${type} habit tracked ${frequency}.\nWill remind you ${
+        `✅ *${habit.name}* has been created as a ${
+          type === "yes-or-no" ? "yes-or-no" : "measuralbe"
+        } habit.\nYou will be tracking this ${frequency}.\nI will remind you ${
           userState.frequency === "daily"
             ? `by ${input} daily`
             : userState.frequency === "weekly"
             ? `on ${input} weekly`
-            : `on the ${input}`
+            : `on the ${input} every month`
         }!`
       )
     }
