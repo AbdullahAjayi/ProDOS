@@ -8,8 +8,13 @@ module.exports = async (client, message) => {
   const userState = userStates[userId] || {}
   const input = message.body.trim().toLowerCase()
 
+  const exitCommand = () => {
+    delete userStates[userId]
+    return safeReply(client, message, "Exited habit creation process.")
+  }
+
   // Set a timeout to delete userState after a long period of inactivity
-  if (userState.timeout) {
+  if (userStates[userId] && userState.timeout) {
     clearTimeout(userState.timeout)
   }
 
@@ -79,6 +84,8 @@ module.exports = async (client, message) => {
           message,
           "How frequent do you want to track this habit?\n\n1. Daily\n2. Weekly\n3. Monthly"
         )
+      } else if (input === "exit") {
+        exitCommand()
       } else {
         console.log("Invalid type input:", input)
         return safeReply(client, message, "Please choose *1* or *2* from the list above.")
@@ -88,6 +95,9 @@ module.exports = async (client, message) => {
     if (userState.step === "frequency") {
       const freqOptions = { 1: "daily", 2: "weekly", 3: "monthly" }
       const freq = freqOptions[input]
+      if (input === "exit") {
+        exitCommand()
+      }
       if (!freq) {
         console.log("invalid frequency input:", input)
         return safeReply(
@@ -108,6 +118,9 @@ module.exports = async (client, message) => {
     }
 
     if (userState.step === "reminderTime") {
+      if (input === "exit") {
+        exitCommand()
+      }
       const timeRegex = /^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i
       if (!timeRegex.test(message.body.trim())) {
         console.log("Invalid time input:", input)
