@@ -155,7 +155,7 @@ module.exports = async (client, message) => {
 
       // Daily reminder logic
       if (userState.frequency === "daily") {
-        const timeRegex = /^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i
+        const timeRegex = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i
         if (!timeRegex.test(input)) {
           console.log("Invalid time input:", input)
           return safeReply(
