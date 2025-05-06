@@ -10,7 +10,8 @@ module.exports = async (client, message) => {
 
   const exitCommand = () => {
     delete userStates[userId]
-    return safeReply(client, message, "Exited habit creation process.")
+    console.log("Exited habit creation process")
+    safeReply(client, message, "Exited habit creation process.")
   }
 
   // Set a timeout to delete userState after a long period of inactivity
@@ -19,8 +20,10 @@ module.exports = async (client, message) => {
   }
 
   userState.timeout = setTimeout(() => {
-    console.log(`Deleting user state for userId: ${userId} due to inactivity.`)
-    if (userStates[userId]) delete userStates[userId]
+    if (userStates[userId]) {
+      console.log(`Deleting user state for userId: ${userId} due to inactivity.`)
+      delete userStates[userId]
+    }
   }, 10 * 60 * 1000) // 10 minutes
 
   const habitName =
@@ -85,7 +88,7 @@ module.exports = async (client, message) => {
           "How frequent do you want to track this habit?\n\n1. Daily\n2. Weekly\n3. Monthly"
         )
       } else if (input === "exit") {
-        exitCommand()
+        return exitCommand()
       } else {
         console.log("Invalid type input:", input)
         return safeReply(client, message, "Please choose *1* or *2* from the list above.")
@@ -93,10 +96,17 @@ module.exports = async (client, message) => {
     }
 
     if (userState.step === "frequency") {
-      const freqOptions = { 1: "daily", 2: "weekly", 3: "monthly" }
+      const freqOptions = {
+        1: "daily",
+        2: "weekly",
+        3: "monthly",
+        daily: "daily",
+        weekly: "weekly",
+        monthly: "monthly",
+      }
       const freq = freqOptions[input]
       if (input === "exit") {
-        exitCommand()
+        return exitCommand()
       }
       if (!freq) {
         console.log("invalid frequency input:", input)
@@ -119,7 +129,7 @@ module.exports = async (client, message) => {
 
     if (userState.step === "reminderTime") {
       if (input === "exit") {
-        exitCommand()
+        return exitCommand()
       }
       const timeRegex = /^([1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i
       if (!timeRegex.test(message.body.trim())) {
