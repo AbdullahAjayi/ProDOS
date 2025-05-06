@@ -22,12 +22,20 @@ module.exports = async (client, message) => {
         $inc: { streak: 1 },
         $set: { lastLogged: new Date(), phone: phone },
       },
-      { new: true, upsert: true }
+      { new: true }
     )
+
+    if (!habit) {
+      return await safeReply(
+        client,
+        message,
+        "*Please provide an existing habit to log.*\nTo create a new habit, use the 'create' command"
+      )
+    }
 
     // success message
     const successMessage =
-      `✅ *${habitName.charAt(0).toUpperCase() + habit.name.slice(1)}* logged!\n` +
+      `✅ *${habit.name.charAt(0).toUpperCase() + habit.name.slice(1)}* logged!\n` +
       `📅 Streak: ${habit.streak} days\n` +
       `⏱️ Last logged: ${formatDate(habit.lastLogged)}`
 
