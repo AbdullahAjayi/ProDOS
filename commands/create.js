@@ -16,9 +16,21 @@ module.exports = async (client, message) => {
   userState.timeout = setTimeout(() => {
     console.log(`Deleting user state for userId: ${userId} due to inactivity.`)
     delete userStates[userId]
-  }, 30 * 60 * 1000) // 30 minutes
+  }, 10 * 60 * 1000) // 10 minutes
 
-  const habitName = input.split(" ").slice(1).join("_").trim()
+  const habitName =
+    input.split(" ")[1] === "habits"
+      ? input.split(" ").slice(2).join("_").trim()
+      : input.split(" ").slice(1).join("_").trim()
+
+  let inValidHabitName = false
+
+  if (input.split(" ")[1] === "habit" || input.split(" ")[1] === "habits") {
+    inValidHabitName = true
+  }
+
+  if (inValidHabitName)
+    return safeReply(client, message, "Habit name can't be 'habit' or 'habits'")
 
   if (!habitName && !userState.step) {
     return safeReply(
