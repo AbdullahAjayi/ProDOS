@@ -47,6 +47,19 @@ module.exports = async (client, message) => {
       "*Please provide a habit name to create.*\nExample: create excercise"
     )
   }
+
+  const existingHabit = await Habit.findOne({ userId, name: habitName })
+  if (existingHabit) {
+    return safeReply(
+      client,
+      message,
+      `⚠️ You already have a habit named *${habitName.replace(
+        /_/g,
+        " "
+      )}*. Please choose a different name.`
+    )
+  }
+
   console.log("Received message:", input)
   console.log("Current user state:", userState)
 
