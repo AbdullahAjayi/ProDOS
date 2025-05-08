@@ -174,7 +174,7 @@ module.exports = async (client, message) => {
           return safeReply(
             client,
             message,
-            "⏱️ Please enter a valid time in the format HH:MM AM/PM (e.g. 7:00 AM)"
+            "Please enter a valid time in the format HH:MM AM/PM (e.g. 7:00 AM)"
           )
         }
         reminderTime = input
