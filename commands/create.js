@@ -26,14 +26,18 @@ module.exports = async (client, message) => {
     }
   }, 10 * 60 * 1000) // 10 minutes
 
-  const habitName =
-    input.split(" ")[1] === "habits"
-      ? input.split(" ").slice(2).join("_").trim()
-      : input.split(" ").slice(1).join("_").trim()
+  const parts = input
+    .split(" ")
+    .slice(1)
+    .map((p) => p.trim())
+    .filter(Boolean)
+  const habitName = (
+    parts[0] === "habit" || parts[0] === "habits" ? parts.slice(1) : parts
+  ).join("_")
 
   let inValidHabitName = false
 
-  if (input.split(" ")[1] === "habit" || input.split(" ")[1] === "habits") {
+  if (habitName === "habit" || habitName === "habits") {
     inValidHabitName = true
   }
 
@@ -44,7 +48,7 @@ module.exports = async (client, message) => {
     return safeReply(
       client,
       message,
-      "*Please provide a habit name to create.*\nExample: create excercise"
+      "*Please provide a habit name to create.*\nExample: create excercise or create habit exercise"
     )
   }
 
@@ -177,7 +181,7 @@ module.exports = async (client, message) => {
             "Please enter a valid time in the format HH:MM AM/PM (e.g. 7:00 AM)"
           )
         }
-        reminderTime = input
+        reminderTime = input.replace(/\s*(am|pm)$/i, " $1").toUpperCase()
       }
 
       // Weekly reminder logic
@@ -237,18 +241,18 @@ module.exports = async (client, message) => {
         client,
         message,
         `✅ *${habit.name}* has been created as a ${
-          type === "yes-or-no" ? "yes-or-no" : "measuralbe"
+          type === "boolean" ? "yes-or-no" : "measuralbe"
         } habit.\nYou will be tracking this ${frequency}.\nI will remind you ${
           userState.frequency === "daily"
-            ? `by ${input} daily`
+            ? `by ${reminderTime} daily`
             : userState.frequency === "weekly"
-            ? `on ${input} weekly`
-            : `on the ${input} every month`
+            ? `on ${reminderTime} weekly`
+            : `on the ${reminderTime} every month`
         }!`
       )
     }
   } catch (error) {
-    console.error("Error in habit creation", error)
+    console.error(`Error creating habit for ${userId}`, error)
     delete userStates[userId]
     return safeReply(
       client,
