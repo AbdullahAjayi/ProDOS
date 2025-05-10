@@ -240,7 +240,9 @@ module.exports = async (client, message) => {
       return safeReply(
         client,
         message,
-        `✅ *${habit.name}* has been created as a ${
+        `✅ *${
+          habit.name.charAt(0).toUpperCase() + habit.name.slice(1)
+        }* has been created as a ${
           type === "boolean" ? "yes-or-no" : "measuralbe"
         } habit.\nYou will be tracking this ${frequency}.\nI will remind you ${
           userState.frequency === "daily"
