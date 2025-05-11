@@ -9,6 +9,12 @@ module.exports = async (client, message) => {
   const userState = userStates[userId] || {}
   const input = message.body.trim().toLowerCase()
 
+  // Set context at the beginning of the flow
+  if (!userState.context) {
+    userState.context = "create"
+    userStates[userId] = userState
+  }
+
   const exitCommand = () => {
     delete userStates[userId]
     console.log("Exited habit creation process")
