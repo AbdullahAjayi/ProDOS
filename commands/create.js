@@ -7,7 +7,7 @@ const { addCorrectSuffix } = require("../utils/helpers")
 module.exports = async (client, message) => {
   const userId = message.from
   const userState = userStates[userId] || {}
-  const input = message.body.trim()
+  const input = message.body.trim().toLowerCase()
 
   const exitCommand = () => {
     delete userStates[userId]
@@ -124,7 +124,7 @@ module.exports = async (client, message) => {
         weekly: "weekly",
         monthly: "monthly",
       }
-      const freq = freqOptions[input.toLowerCase()]
+      const freq = freqOptions[input]
       if (input === "exit") {
         return exitCommand()
       }
@@ -164,8 +164,6 @@ module.exports = async (client, message) => {
 
     // reminder time logic
     if (userState.step === "reminderTime") {
-      let reminderTime = {}
-
       // when user types 'exit'
       if (input === "exit") {
         return exitCommand()
@@ -193,11 +191,11 @@ module.exports = async (client, message) => {
           hour = `0${hour}`
         }
 
-        reminderTime = {
+        userState.reminderTime = {
           frequency: "daily",
           time: `${hour}:${minutes} ${period}`,
         }
-        console.log("Formatted time: ", reminderTime)
+        console.log("Formatted time:", userState.reminderTime)
       }
 
       // Weekly reminder logic
@@ -214,7 +212,7 @@ module.exports = async (client, message) => {
 
         // If the user hasn't selected a day yet
         if (!userState.dayOfTheWeek) {
-          if (!validDays.includes(input.toLowerCase())) {
+          if (!validDays.includes(input)) {
             console.log("Invalid day input:", input)
             return safeReply(
               client,
@@ -223,9 +221,7 @@ module.exports = async (client, message) => {
             )
           }
 
-          userState.weeklyDay =
-            input.charAt(0).toUpperCase() + input.slice(1).toLowerCase()
-          userStates[userId] = userState
+          userState.dayOfTheWeek = input.charAt(0).toUpperCase() + input.slice(1)
 
           console.log("Selected day for weekly reminder:", userState.dayOfTheWeek)
 
@@ -235,6 +231,7 @@ module.exports = async (client, message) => {
             `🕒 What time on ${userState.dayOfTheWeek}s do you want to be reminded? (e.g. 7 am or 7:30 pm)`
           )
         }
+
         // If the user has already selected a day, prompt for the time
         const timeRegex = /^(0?[1-9]|1[0-2])(:[0-5][0-9])?\s?(AM|PM)$/i
         if (!timeRegex.test(input)) {
@@ -250,19 +247,19 @@ module.exports = async (client, message) => {
         const match = input.match(timeRegex)
         let hour = match[1]
         let minutes = match[2] || ":00"
-        const period = match[3].toUpperCase()
+        const period = match[3]
 
         if (hour.length === 1) {
           hour = `0${hour}`
         }
 
         // Save the weekly reminder time
-        reminderTime = {
+        userState.reminderTime = {
           frequency: "weekly",
           day: userState.dayOfTheWeek,
           time: `${hour}${minutes} ${period}`,
         }
-        console.log("Formatted weekly reminder time:", reminderTime)
+        console.log("Formatted weekly reminder time:", userState.reminderTime)
       }
 
       // Monthly reminder logic
@@ -270,7 +267,6 @@ module.exports = async (client, message) => {
         const dateRegex = /^(0?[1-9]|[12][0-9]|3[01])(st|nd|rd|th)?$/i
 
         // If the user hasn't selected a date yet
-
         if (!userState.dateOfTheMonth) {
           if (!dateRegex.test(input)) {
             console.log("Invalid date input:", input)
@@ -281,8 +277,6 @@ module.exports = async (client, message) => {
             )
           }
           userState.dateOfTheMonth = addCorrectSuffix(input.match(dateRegex)[1])
-
-          userStates[userId] = userState
 
           console.log("Selected date for monthly reminder:", userState.dateOfTheMonth)
 
@@ -315,47 +309,75 @@ module.exports = async (client, message) => {
         }
 
         // Save the monthly reminder time
-        reminderTime = {
+        userState.reminderTime = {
           frequency: "monthly",
           date: userState.dateOfTheMonth,
           time: `${hour}${minutes} ${period}`,
         }
-        console.log("Formatted monthly reminder time:", reminderTime)
+        console.log("Formatted monthly reminder time:", userState.reminderTime)
       }
 
-      // save final habit
-      const { habitName, type, frequency } = userState
-      const habit = new Habit({
-        userId: message.from,
-        name: habitName,
-        type,
-        frequency,
-        reminderTime,
-        streak: 0,
-        lastLogged: new Date(),
-        phone: message.from.replace(/@.+/, ""),
-      })
-      await habit.save()
+      userState.step = "confirmedHabitCreation"
+      userStates[userId] = userState
 
-      // delete userState globally when done
-      delete userStates[userId]
+      console.log("Habit confirmation stage. Awaiting user input...")
 
       // Success message/feedback
       return safeReply(
         client,
         message,
-        `✅ *${
-          habit.name.charAt(0).toUpperCase() + habit.name.slice(1)
-        }* has been created as a ${
-          type === "boolean" ? "yes-or-no" : "measuralbe"
-        } habit.\n\nYou will be tracking this ${frequency}.\n\nI will be reminding you ${
-          userState.frequency === "daily"
-            ? `by ${reminderTime.time}`
-            : userState.frequency === "weekly"
-            ? `on ${reminderTime.day}s by ${reminderTime.time}`
-            : `on the ${reminderTime.date} of every month by ${reminderTime.time}`
-        }!`
+        "Are you sure you want to create this habit?\nYes/No"
       )
+    }
+
+    if (userState.step === "confirmedHabitCreation") {
+      if (input === "yes") {
+        // save final habit
+        const { habitName, type, frequency, reminderTime } = userState
+        const habit = new Habit({
+          userId: message.from,
+          name: habitName,
+          type,
+          frequency,
+          reminderTime,
+          streak: 0,
+          lastLogged: new Date(),
+          phone: message.from.replace(/@.+/, ""),
+        })
+        await habit.save()
+
+        // delete userState globally when done
+        delete userStates[userId]
+
+        // Success message/feedback
+        return safeReply(
+          client,
+          message,
+          `✅ *${
+            habit.name.charAt(0).toUpperCase() + habit.name.slice(1)
+          }* has been created as a ${
+            type === "boolean" ? "yes-or-no" : "measuralbe"
+          } habit.\n\nYou will be tracking this ${frequency}.\n\nI will be reminding you ${
+            userState.frequency === "daily"
+              ? `by ${reminderTime.time}`
+              : userState.frequency === "weekly"
+              ? `on ${reminderTime.day}s by ${reminderTime.time}`
+              : `on the ${reminderTime.date} of every month by ${reminderTime.time}`
+          }!`
+        )
+      } else if (input === "no") {
+        delete userStates[userId]
+        console.log("Terminated habit creation process")
+        return safeReply(
+          client,
+          message,
+          "Habit creation process terminated successfully."
+        )
+      } else if (input === "exit") {
+        return exitCommand()
+      } else {
+        console.log("Invalid option", input)
+      }
     }
   } catch (error) {
     console.error(`Error creating habit for ${userId}`, error)
