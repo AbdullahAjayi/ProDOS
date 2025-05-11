@@ -2,6 +2,7 @@ const safeReply = require("../handlers/safeReply")
 const Habit = require("../models/habit")
 
 const userStates = require("../state/session")
+const { addCorrectSuffix } = require("../utils/helpers")
 
 module.exports = async (client, message) => {
   const userId = message.from
@@ -248,7 +249,7 @@ module.exports = async (client, message) => {
         // Formate the time input
         const match = input.match(timeRegex)
         let hour = match[1]
-        let minutes = match[2] || "00"
+        let minutes = match[2] || ":00"
         const period = match[3].toUpperCase()
 
         if (hour.length === 1) {
@@ -259,7 +260,7 @@ module.exports = async (client, message) => {
         reminderTime = {
           frequency: "weekly",
           day: userState.dayOfTheWeek,
-          time: `${hour}:${minutes} ${period}`,
+          time: `${hour}${minutes} ${period}`,
         }
         console.log("Formatted weekly reminder time:", reminderTime)
       }
@@ -267,15 +268,59 @@ module.exports = async (client, message) => {
       // Monthly reminder logic
       if (userState.frequency === "monthly") {
         const dateRegex = /^(0?[1-9]|[12][0-9]|3[01])(st|nd|rd|th)?$/i
-        if (!dateRegex.test(input)) {
-          console.log("Invalid date input:", input)
+
+        // If the user hasn't selected a date yet
+
+        if (!userState.dateOfTheMonth) {
+          if (!dateRegex.test(input)) {
+            console.log("Invalid date input:", input)
+            return safeReply(
+              client,
+              message,
+              "📅 Please enter a valid date of the month (e.g. 21st, 5th)."
+            )
+          }
+          userState.dateOfTheMonth = addCorrectSuffix(input.match(dateRegex)[1])
+
+          userStates[userId] = userState
+
+          console.log("Selected date for monthly reminder:", userState.dateOfTheMonth)
+
           return safeReply(
             client,
             message,
-            "📅 Please enter a valid date of the month (e.g. 21st, 5th)."
+            `🕒 What time on the ${userState.dateOfTheMonth} do you want to be reminded? (e.g. 7 am or 7:30 pm)`
           )
         }
-        reminderTime = { frequency: "monthly", date: input }
+
+        // If the user has already selected a date, prompt for the time
+        const timeRegex = /^(0?[1-9]|1[0-2])(:[0-5][0-9])?\s?(AM|PM)$/i
+        if (!timeRegex.test(input)) {
+          console.log("Invalid time input:", input)
+          return safeReply(
+            client,
+            message,
+            "⏱️ Please enter a valid time in the format HH:MM AM/PM (e.g. 7 am or 7:30 pm)."
+          )
+        }
+
+        // Formate the time input
+        const match = input.match(timeRegex)
+        let hour = match[1]
+        let minutes = match[2] || ":00"
+        const period = match[3]
+
+        if (hour.length === 1) {
+          hour = `0${hour}`
+        }
+
+        // Save the monthly reminder time
+        reminderTime = {
+          frequency: "monthly",
+          date: userState.dateOfTheMonth,
+          time: `${hour}${minutes} ${period}`,
+        }
+        console.log("Formatted monthly reminder time:", reminderTime)
       }
 
       // save final habit
@@ -308,7 +353,7 @@ module.exports = async (client, message) => {
             ? `by ${reminderTime.time}`
             : userState.frequency === "weekly"
             ? `on ${reminderTime.day}s by ${reminderTime.time}`
-            : `on the ${reminderTime.date} of every month`
+            : `on the ${reminderTime.date} of every month by ${reminderTime.time}`
         }!`
       )
     }
