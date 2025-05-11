@@ -33,7 +33,9 @@ module.exports = async (client, message) => {
     .map((p) => p.trim())
     .filter(Boolean)
 
-  const habitName = parts.join("_")
+  const habitName = (
+    parts[0] === "habit" || parts[0] === "habits" ? parts.slice(1) : parts
+  ).join("_")
 
   let inValidHabitName = false
 
