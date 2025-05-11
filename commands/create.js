@@ -9,12 +9,6 @@ module.exports = async (client, message) => {
   const userState = userStates[userId] || {}
   const input = message.body.trim().toLowerCase()
 
-  // Set context at the beginning of the flow
-  if (!userState.context) {
-    userState.context = "create"
-    userStates[userId] = userState
-  }
-
   const exitCommand = () => {
     delete userStates[userId]
     console.log("Exited habit creation process")
@@ -70,18 +64,17 @@ module.exports = async (client, message) => {
         return safeReply(
           client,
           message,
-          `⚠️ You already have a habit named *${habitName.replace(
-            /_/g,
-            " "
-          )}*. Please choose a different name.`
+          `⚠️ You already have a habit named *${habitName}*. Please choose a different name.`
         )
       }
 
-      userState.step = "typeOfHabitPrompt"
+      // Set context at the beginning of the flow
+      userState.context = "create"
+      userState.step = "habitType"
       userState.habitName = habitName
       userStates[userId] = userState
 
-      console.log("Step: typeOfHabitPrompt | Habit Name:", userState.habitName)
+      console.log("Step: habitType | Habit Name:", userState.habitName)
       return safeReply(
         client,
         message,
@@ -90,7 +83,7 @@ module.exports = async (client, message) => {
     }
 
     // type of habit prompt logic
-    if (userState.step === "typeOfHabitPrompt") {
+    if (userState.step === "habitType") {
       if (input === "1" || input === "yes-or-no") {
         userState.type = "boolean"
         userState.step = "frequency"
@@ -324,7 +317,7 @@ module.exports = async (client, message) => {
         console.log("Formatted monthly reminder time:", userState.reminderTime)
       }
 
-      userState.step = "confirmedHabitCreation"
+      userState.step = "confirmation"
       userStates[userId] = userState
 
       console.log("Habit confirmation stage. Awaiting user input...")
@@ -337,7 +330,7 @@ module.exports = async (client, message) => {
       )
     }
 
-    if (userState.step === "confirmedHabitCreation") {
+    if (userState.step === "confirmation") {
       if (input === "yes") {
         // save final habit
         const { habitName, type, frequency, reminderTime } = userState
