@@ -3,6 +3,7 @@ const commands = {
   list: require("./commands/listHabits"),
   help: require("./commands/help"),
   create: require("./commands/create"),
+  delete: require("./commands/delete"),
 }
 
 const fallbacks = [require("./fallbacks/hiHandler")]
