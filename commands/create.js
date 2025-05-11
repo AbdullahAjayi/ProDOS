@@ -350,6 +350,7 @@ module.exports = async (client, message) => {
         delete userStates[userId]
 
         // Success message/feedback
+        console.log("Habit created successfully! ✅")
         return safeReply(
           client,
           message,
@@ -375,6 +376,11 @@ module.exports = async (client, message) => {
         return exitCommand()
       } else {
         console.log("Invalid option", input)
+        return safeReply(
+          client,
+          message,
+          "Please respond with 'Yes' or 'No' to confirm or cancel the habit creation."
+        )
       }
     }
   } catch (error) {
