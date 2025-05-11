@@ -47,8 +47,8 @@ const habitSchema = new mongoose.Schema(
       default: "daily",
     },
     reminderTime: {
-      type: String,
-      default: null, // store as 'HH:mm'
+      type: Object,
+      default: null, // Example: { frequency: "daily", time: "07:00 AM" }
     },
   },
   { timestamps: true }
