@@ -35,7 +35,7 @@ module.exports = async (client, message) => {
 
   const habitName = (
     parts[0] === "habit" || parts[0] === "habits" ? parts.slice(1) : parts
-  ).join("_")
+  ).join(" ")
 
   let inValidHabitName = false
 
