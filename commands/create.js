@@ -52,23 +52,23 @@ module.exports = async (client, message) => {
     )
   }
 
-  const existingHabit = await Habit.findOne({ userId, name: habitName })
-  if (existingHabit) {
-    return safeReply(
-      client,
-      message,
-      `⚠️ You already have a habit named *${habitName.replace(
-        /_/g,
-        " "
-      )}*. Please choose a different name.`
-    )
-  }
-
   console.log("Received message:", input)
   console.log("Current user state:", userState)
 
   try {
     if (!userState.step) {
+      const existingHabit = await Habit.findOne({ userId, name: habitName })
+      if (existingHabit) {
+        return safeReply(
+          client,
+          message,
+          `⚠️ You already have a habit named *${habitName.replace(
+            /_/g,
+            " "
+          )}*. Please choose a different name.`
+        )
+      }
+
       userState.step = "typeOfHabitPrompt"
       userState.habitName = habitName
       userStates[userId] = userState
@@ -237,6 +237,7 @@ module.exports = async (client, message) => {
       // delete userState globally when done
       delete userStates[userId]
 
+      // Success message/feedback
       return safeReply(
         client,
         message,
