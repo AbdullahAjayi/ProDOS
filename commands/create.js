@@ -177,7 +177,7 @@ module.exports = async (client, message) => {
           return safeReply(
             client,
             message,
-            "Please enter a valid time format using AM/PM (e.g. 7 am or 7:30 pm)."
+            "⏱ Please enter a valid time format using AM/PM (e.g. 7 am or 7:30 pm)."
           )
         }
 
@@ -228,7 +228,7 @@ module.exports = async (client, message) => {
           return safeReply(
             client,
             message,
-            `🕒 What time on ${userState.dayOfTheWeek}s do you want to be reminded? (e.g. 7 am or 7:30 pm)`
+            `🕒 What time do you want to be reminded on ${userState.dayOfTheWeek}s? (e.g. 7 am or 7:30 pm)`
           )
         }
 
