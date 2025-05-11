@@ -14,7 +14,7 @@ module.exports = async (client, message) => {
 
   // Check if user has an ongoing state (e.g., during create habit flow)
   const userState = userStates[userId]
-  // ✅ Route to the appropriate handler based on ongoing userState.context
+  // ✅ Route to the appropriate command based on ongoing userState.context
   if (userState && userState.step && userState.context) {
     const contextHandler = commands[userState.context]
     if (contextHandler) {
