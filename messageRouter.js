@@ -4,6 +4,7 @@ const commands = {
   help: require("./commands/help"),
   create: require("./commands/create"),
   delete: require("./commands/delete"),
+  // add update command here
 }
 
 const fallbacks = [require("./fallbacks/hiHandler")]
