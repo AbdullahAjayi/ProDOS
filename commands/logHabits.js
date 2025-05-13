@@ -29,7 +29,7 @@ module.exports = async (client, message) => {
       return await safeReply(
         client,
         message,
-        "*Please provide an existing habit to log.*\nTo create a new habit, use the 'create' command"
+        "*Please provide an existing habit to log.*\nTo create a new habit, use the 'create' command."
       )
     }
 
