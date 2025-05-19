@@ -12,7 +12,8 @@ const WELCOME_MSG =
   "👋🏽 Hey there! I’m *ProDOS* — your WhatsApp productivity partner.\n" +
   "Ready to help you build habits, set reminders, and hit your goals 🚀\n\n" +
   "*Here are a few commands to get started:*\n" +
-  "* *log* — log a new habit\n" +
+  "* *create* — create a new habit\n" +
+  "* *log* — log an existing habit\n" +
   "* *reminder* — set habit reminders\n" +
   "* *list habits* — view your habits\n" +
   "* *delete* — delete a habit\n\n" +
