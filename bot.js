@@ -41,8 +41,11 @@ mongoose.connect(process.env.MONGODB_URI).then(() => {
 
   client.on("message", async (message) => {
     const user = await findOrCreateUser(message.from, message._data.notifyName || "User")
+    const chat = await message.getChat()
 
-    if (!user.onboarded) {
+    if (!user.onboarded && !chat.isGroup) {
+      // If user is not onboarded and it's a private chat, send welcome message
+      console.log(`Sending welcome message to ${message.from}`)
       await safeReply(client, message, WELCOME_MSG)
       user.onboarded = true
       await user.save()

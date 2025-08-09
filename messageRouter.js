@@ -4,7 +4,7 @@ const commands = {
   help: require("./commands/help"),
   create: require("./commands/create"),
   delete: require("./commands/delete"),
-  "dear-all": require("./commands/tagall"),
+  "@everyone": require("./commands/tagall"),
   // add update command here
 }
 
