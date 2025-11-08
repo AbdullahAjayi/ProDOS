@@ -58,11 +58,13 @@ export function registerOnboarding(bot: Bot<MyContext>) {
         }
 
 
-        await ctx.reply(`${emailOption === 'Add email ✉️' ? 'Now...\n' : 'Alright. '}Let’s begin with one small habit you’d like to start building. \n What new habit would you like to create?\n\n(Something simple — like Reading 10 mins daily, or Journaling each morning.)`)
+        await ctx.reply(`${emailOption === 'Add email ✉️' ? 'Now...\n' : 'Alright. '}Let’s begin with one small habit you’d like to start building. \n\nWhat new habit would you like to create?\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`)
 
         const { message } = await conversation.waitFor('message:text')
 
-        await ctx.reply(`Perfect 🌱 \nYou’ve created your first habit — ${message.text}. \n\nYou can manage all your habits from the buttons below 👇\n(or click the menu button for further actions)`)
+        await ctx.reply(`Perfect 🌱 \nYou’ve created your first habit: <b><i>${message.text}</i></b>. \n\nYou can manage all your habits from the buttons below 👇\n(or click the menu button for further actions)`, {
+            parse_mode: "HTML",
+        })
     }
 
     bot.use(createConversation(startCommand))
