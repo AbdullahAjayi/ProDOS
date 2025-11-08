@@ -30,7 +30,9 @@ registerOnboarding(bot);
 
 // Other text from chat
 bot.on("message:text", (ctx) => {
-  ctx.reply(`You said: ${ctx.msg.text}`);
+  ctx.reply(`You said: <b><i>${ctx.msg.text}</i></b>`, {
+    parse_mode: 'HTML'
+  });
 });
 
 console.log(".\n.\n.\nProDOS Telegram Bot is running...");
