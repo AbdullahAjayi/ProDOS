@@ -9,7 +9,8 @@ export function registerOnboarding(bot: Bot<MyContext>) {
         const name = await askForName(conversation, ctx)
         const purpose = await askForMainPurpose(conversation, ctx)
         const email = await askForEmail(conversation, ctx)
-        const habit = await askForHabit(conversation, ctx)
+        const { emailOption } = email
+        const habit = await askForHabit(conversation, ctx, emailOption)
     }
 
     bot.use(createConversation(startCommand))
@@ -86,14 +87,26 @@ async function askForEmail(conversation: Conversation<MyContext>, ctx: Context) 
         await delay(800, 1300)
     }
 
-
-    await ctx.reply(`${emailOption === 'Add email ✉️' ? 'Now...\n' : 'Alright. '}Let’s begin with one small habit you’d like to start building. \n\nWhat new habit would you like to create?\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`)
+    return { emailOption }
 }
 
-async function askForHabit(conversation: Conversation<MyContext>, ctx: Context) {
+async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, emailOption: string) {
+    await ctx.reply(`${emailOption === 'Add email ✉️' ? 'Now...\n' : 'Alright. '}Let’s begin with one small habit you’d like to start building. \n\nWhat new habit would you like to create?\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`, {
+        reply_markup: new InlineKeyboard().text('Skip habit creation for now')
+    })
+
+    const createHabit = await conversation.waitFor('callback_query:data')
+
+    if (createHabit.callbackQuery.data === 'Skip habit creation for now') {
+        await ctx.reply(`Alright! Your details have been saved! \nClick the menu button below to get started.`)
+        return
+    }
+
+    // todo - Import Habit Creation logic here
+
     const { message } = await conversation.waitFor('message:text')
 
-    await ctx.reply(`Perfect 🌱 \nYou’ve created your first habit: <b><i>${message.text}</i></b>. \n\nYou can manage all your habits from the buttons below 👇\n(or click the menu button for further actions)`, {
+    await ctx.reply(`Perfect 🌱 \nYou’ve created your first habit: <b><i>${message.text}</i></b>. \n\nNow, I would be asking you a few questions to make sure your habit is all set`, {
         parse_mode: "HTML",
     })
 }
