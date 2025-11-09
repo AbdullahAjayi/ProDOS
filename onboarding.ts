@@ -164,7 +164,6 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
         unit = unitRes.message.text;
 
         await ctx.reply(`Cool. And what’s your <b>target</b> for each session?`, {
-            // add a custom keyboard that shows a base number 1, and a plus and minus button that makes the user update the btn with the number value (edit it as the users either click + or -. But the number musn't go below 1)
             parse_mode: "HTML",
         });
         const targetRes = await conversation.waitFor("message:text");
