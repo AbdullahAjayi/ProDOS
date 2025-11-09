@@ -91,14 +91,14 @@ async function askForEmail(conversation: Conversation<MyContext>, ctx: Context) 
 }
 
 async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, emailOption: string) {
-    await ctx.reply(`${emailOption === 'Add email ✉️' ? 'Now...\n' : 'Alright. '}Let’s begin with one small habit you’d like to start building. \n\nWhat new habit would you like to create?\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`, {
+    await ctx.reply(`${emailOption === 'Add email ✉️' ? 'Now...\n' : 'Alright. '}Let’s begin with one small habit you’d like to start building. \n\n<b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`, {
         reply_markup: new InlineKeyboard().text('Skip habit creation for now')
     })
 
     const createHabit = await conversation.waitFor('callback_query:data')
 
     if (createHabit.callbackQuery.data === 'Skip habit creation for now') {
-        await ctx.reply(`Alright! Your details have been saved! \nClick the menu button below to get started.`)
+        await ctx.reply(`Alright! Your details have been saved! \nClick the menu button below to explore the possibilities of ProDOS. 🚀`)
         return
     }
 
@@ -109,4 +109,12 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
     await ctx.reply(`Perfect 🌱 \nYou’ve created your first habit: <b><i>${message.text}</i></b>. \n\nNow, I would be asking you a few questions to make sure your habit is all set`, {
         parse_mode: "HTML",
     })
+
+    delay(800, 1600)
+
+    await ctx.reply('What kind of habit is this? \nIs this a <code>measurable</code> or <code>yes-or-no</code> habit?', {
+        parse_mode: 'HTML', reply_markup: new InlineKeyboard().text('📈 Measurable habit').text('✅ Yes-or-no habit')
+    })
+
+    // what's the best way to know what has happened here? Is it by knowing what the user clicked manually, or by using the callbackquery function?
 }
