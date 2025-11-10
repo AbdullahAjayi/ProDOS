@@ -26,8 +26,8 @@ export function registerOnboarding(bot: Bot<MyContext>) {
         const { emailOption } = email;
         const habit = await askForHabit(conversation, ctx, emailOption);
         await delay(1000, 1500);
-        await ctx.reply("🎉 You're all set! Welcome aboard ProDOS 🚀", {
-            reply_markup: { remove_keyboard: true },
+        await ctx.reply("<b>🎉 You're all set! Welcome aboard ProDOS 🚀</b>", {
+            reply_markup: { remove_keyboard: true }, parse_mode: "HTML",
         });
     };
 
