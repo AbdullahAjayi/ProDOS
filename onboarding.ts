@@ -1,5 +1,5 @@
 import { createConversation, type Conversation } from "@grammyjs/conversations";
-import { InlineKeyboard, Context, Bot } from "grammy";
+import { InlineKeyboard, Context, Bot, Keyboard } from "grammy";
 import { MyContext } from './bot';
 import { delay } from "./utils/helpers";
 
@@ -25,6 +25,10 @@ export function registerOnboarding(bot: Bot<MyContext>) {
         const email = await askForEmail(conversation, ctx);
         const { emailOption } = email;
         const habit = await askForHabit(conversation, ctx, emailOption);
+        await delay(1000, 1500);
+        await ctx.reply("🎉 You're all set! Welcome aboard ProDOS 🚀", {
+            reply_markup: { remove_keyboard: true },
+        });
     };
 
     bot.use(createConversation(startCommand));
@@ -154,7 +158,7 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
     await habitTypeRes.answerCallbackQuery();
 
     let unit: string | null = null;
-    let target: string | null = null;
+    let target: number | null = null;
 
     if (habitType === "measurable") {
         await ctx.reply("Nice! What’s the <b>unit</b> for this habit? (e.g. pages, minutes, pushups)", {
@@ -166,10 +170,22 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
         await ctx.reply(`Cool. And what’s your <b>target</b> for each session?`, {
             parse_mode: "HTML",
         });
-        const targetRes = await conversation.waitFor("message:text");
-        target = targetRes.message.text;
 
-        await ctx.reply(`Got it! Your goal is ${target} ${unit} per session.`);
+        while (true) {
+            const targetRes = await conversation.waitFor("message:text");
+            const input = targetRes.message.text.trim();
+
+            // Check if it's a valid number
+            const parsed = Number(input);
+            if (!isNaN(parsed) && parsed > 0) {
+                target = parsed;
+                await ctx.reply(`Got it! Your goal is ${target} ${unit} per session.`);
+                break; // exit loop once valid number is entered
+            } else {
+                await targetRes.reply("⚠️ Please enter a valid number (e.g. 10, 25, 100).");
+            }
+        }
+
         await delay(700, 1200);
     }
 
@@ -185,7 +201,7 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
     if (frequency === "custom") {
         let selectedDays: string[] = [];
         let message = await freqRes.reply(
-            "📆 Select the days you want to track this habit (tap to toggle):",
+            "📆 Select the days you want to track this habit (tap to toggle) 👇\n\nClick ✅Done when you're done",
             { reply_markup: getDaysKeyboard(selectedDays) }
         );
 
@@ -217,21 +233,81 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
     }
 
     await ctx.reply(
-        `At what time of the day would you like me to remind you about <b>${habitName}</b>? (e.g., 7:00 AM, 9:30 PM)`,
+        `At what time of the day would you like me to remind you about <b>${habitName}?</b>`,
         {
-            parse_mode: "HTML"
-            // add a Custom Keyboard here with predefined times
+            parse_mode: "HTML",
+            reply_markup: new Keyboard()
+                .text("🌅 6:00 AM")
+                .text("☀️ 9:00 AM")
+                .row()
+                .text("🌇 6:00 PM")
+                .text("🌙 9:00 PM")
+                .row()
+                .text("⏰ Custom Time")
+                .resized()
         }
     );
 
-    const timeRes = await conversation.waitFor("message:text");
-    const reminderTime = timeRes.message.text;
+    // --- time selection (fixed) ---
+    let reminderTime: string | undefined;
 
-    await ctx.reply(
-        `Perfect! I’ll remind you at <b>${reminderTime}</b> every ${frequency === "everyday" ? "day" : "selected days"
-        }.`,
-        { parse_mode: "HTML" }
-    );
+    // first read (this is the message from the custom keyboard or user's typed time)
+    const timeRes = await conversation.waitFor("message:text");
+    const chosenTime = timeRes.message.text.trim();
+    console.log("[time][first] ", chosenTime); // trace of first input
+
+    if (chosenTime === "⏰ Custom Time") {
+        // user chose custom — stay in a dedicated loop until a valid time is given
+        await timeRes.reply(
+            "Please type your preferred reminder time in 12-hour format (e.g., 7:00 AM, 9:30 PM):",
+            { reply_markup: { remove_keyboard: true } }
+        );
+
+        const timePattern = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i;
+
+        while (true) {
+            const customRes = await conversation.waitFor("message:text");
+            reminderTime = customRes.message.text.trim();
+            console.log("[time][custom input] ", reminderTime); // trace each custom attempt
+
+            // normalize (remove emojis / extra chars) before validating
+            const normalized = reminderTime.replace(/[^\d:APMapm ]/g, "").trim();
+
+            if (!timePattern.test(normalized)) {
+                await customRes.reply(
+                    "⚠️ That doesn’t look like a valid time. Please try again (e.g., 7:00 AM)."
+                );
+                continue; // stay in this loop until valid
+            }
+
+            // valid -> use normalized form
+            reminderTime = normalized;
+            console.log("[time][valid] ", reminderTime);
+            break;
+        }
+    } else {
+        // user picked one of the keyboard presets (or typed a time directly)
+        let normalized = chosenTime.replace(/[^\d:APMapm ]/g, "").trim();
+        const timePattern = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s?(AM|PM)$/i;
+
+        // Keep logging untill valid time is entered
+        while (!timePattern.test(normalized)) {
+            await ctx.reply("⚠️ That doesn’t look like a valid time. Please try again (e.g., 7:00 AM)."
+            )
+
+            const newTimeRes = await conversation.waitFor('message:text')
+            normalized = newTimeRes.message.text.replace(/[^\d:APMapm ]/g, "").trim()
+        }
+        // Once valid...
+        reminderTime = normalized
+    }
+
+    // final confirmation (runs only after a valid reminderTime is set)
+    await ctx.reply(`Perfect! I’ll remind you at <b>${reminderTime}</b>.`, {
+        parse_mode: "HTML",
+        reply_markup: { remove_keyboard: true },
+    });
+
 
     await delay(1000, 1500);
 
@@ -245,7 +321,7 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
         reminderTime,
     };
 
-    await ctx.reply("✅ Your habit has been fully set up!");
+    await ctx.reply("✅ Your habit has been fully set up!", { reply_markup: { remove_keyboard: true } });
     console.log("HABIT DATA:", habitData);
 
     return habitData;
