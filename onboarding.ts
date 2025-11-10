@@ -121,19 +121,12 @@ async function askForHabit(conversation: Conversation<MyContext>, ctx: Context, 
         `${emailOption === "Add email ✉️" ? "Now...\n" : "Alright. "}Let’s begin with one small habit you’d like to start building. \n\n<b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`,
         {
             parse_mode: "HTML",
-            reply_markup: new InlineKeyboard().text("Skip habit creation for now", "skip_habit"),
         }
     );
 
-    const action = await conversation.waitFor(["callback_query:data", "message:text"]);
-    if (action.update.callback_query?.data === "skip_habit") {
-        await ctx.reply(
-            `Alright! Your details have been saved! \nClick the menu button below to explore the possibilities of ProDOS. 🚀`
-        );
-        return;
-    }
+    const habitRes = await conversation.waitFor("message:text");
 
-    const habitName = action.message?.text || "Unnamed habit";
+    const habitName = habitRes.message?.text || "Unnamed habit";
 
     await ctx.reply(
         `Perfect 🌱 \nYou’ve created your first habit: <b><i>${habitName}</i></b>. \n\nNow, I’ll ask you a few questions to set it up properly.`,
