@@ -102,5 +102,3 @@ async function askForEmail(conversation: Conversation<MyContext>, ctx: Context) 
 
     return { emailOption, email: null };
 }
-
-
