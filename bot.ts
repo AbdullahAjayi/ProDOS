@@ -40,7 +40,5 @@ bot.on("message:text", (ctx) => {
   });
 });
 
-
-
 console.log(".\n.\n.\nProDOS Telegram Bot is running...");
 bot.start()

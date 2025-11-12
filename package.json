@@ -14,7 +14,9 @@
   "dependencies": {
     "@grammyjs/conversations": "^2.1.0",
     "dotenv": "^17.2.3",
-    "grammy": "^1.38.3"
+    "grammy": "^1.38.3",
+    "mongodb": "^7.0.0",
+    "mongoose": "^8.19.3"
   },
   "devDependencies": {
     "@types/node": "^24.9.2",
