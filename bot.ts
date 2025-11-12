@@ -1,44 +1,60 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Bot, Context } from 'grammy';
+import { Bot, Context, session, SessionFlavor } from 'grammy';
 import { type ConversationFlavor, conversations, createConversation } from "@grammyjs/conversations";
 import { registerOnboarding } from "./onboarding";
 import createHabit from "./logic/habit/createHabit";
+import { connectDB, SessionData } from "./db";
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
+const BOT_TOKEN = process.env.BOT_TOKEN!;
 if (!BOT_TOKEN) {
   throw new Error('BOT_TOKEN environment variable not defined')
 }
 
-export type MyContext = ConversationFlavor<Context>;
+type MyContext = ConversationFlavor<Context>;
+export type MySessionContext = MyContext & SessionFlavor<SessionData>;
 
-const bot = new Bot<MyContext>(BOT_TOKEN);
-bot.use(conversations())
+async function main() {
+  const bot = new Bot<MySessionContext>(BOT_TOKEN);
 
-// Set Bot Commands
-async function setBotCommands() {
+  const adapter = await connectDB()
+  bot.use(session({
+    initial: (): SessionData => ({
+      onboardingComplete: false,
+    }),
+    storage: adapter
+  }))
+
+  bot.use(conversations())
+
+  // Set Bot Commands
   await bot.api.setMyCommands([
     { command: "start", description: "Start a conversation with me" },
     { command: "help", description: "Show help message" },
     { command: "create_habit", description: "Create a new habit" },
-  ]);
-}
-setBotCommands().catch(err => console.log(err))
+  ])
+    .catch(err => console.log(err))
 
-// Register the start command
-registerOnboarding(bot);
+  // Register the start command
+  registerOnboarding(bot);
 
-// Create habit command
-bot.use(createConversation(createHabit));
-bot.command('create_habit', async (ctx) => await ctx.conversation.enter("createHabit"))
+  // Create habit command
+  bot.use(createConversation(createHabit));
+  bot.command('create_habit', async (ctx) => await ctx.conversation.enter("createHabit"))
 
-// Other text from chat
-bot.on("message:text", (ctx) => {
-  ctx.reply(`You said: <b><i>${ctx.msg.text}</i></b>`, {
-    parse_mode: 'HTML'
+  // Other text from chat
+  bot.on("message:text", (ctx) => {
+    ctx.reply(`You said: <b><i>${ctx.msg.text}</i></b>`, {
+      parse_mode: 'HTML'
+    });
   });
-});
 
-console.log(".\n.\n.\nProDOS Telegram Bot is running...");
-bot.start()
+  console.log(".\n.\n.\nProDOS Telegram Bot is running...");
+  bot.start()
+}
+
+main().catch(err => {
+  console.error('Failed to start bot:', err)
+  process.exit(1);
+})

@@ -1,12 +1,12 @@
 import { createConversation, type Conversation } from "@grammyjs/conversations";
 import { InlineKeyboard, Context, Bot, Keyboard } from "grammy";
-import { MyContext } from './bot';
+import { MySessionContext } from './bot';
 import { delay } from "./utils/helpers";
 import createHabit from "./logic/habit/createHabit";
 
 
-export function registerOnboarding(bot: Bot<MyContext>) {
-    const startCommand = async (conversation: Conversation<MyContext>, ctx: Context) => {
+export function registerOnboarding(bot: Bot<MySessionContext>) {
+    const startCommand = async (conversation: Conversation<MySessionContext>, ctx: Context) => {
         const name = await askForName(conversation, ctx);
         const purpose = await askForMainPurpose(conversation, ctx);
         const email = await askForEmail(conversation, ctx);
@@ -40,7 +40,7 @@ export function registerOnboarding(bot: Bot<MyContext>) {
 // modular functions
 // ---------------------------
 
-async function askForName(conversation: Conversation<MyContext>, ctx: Context) {
+async function askForName(conversation: Conversation<MySessionContext>, ctx: Context) {
     const { first_name, last_name } = ctx.from!;
     await ctx.reply(`Great! \n\nI see your name is ${first_name} ${last_name}, should I keep it as that?`, {
         reply_markup: new InlineKeyboard()
@@ -62,7 +62,7 @@ async function askForName(conversation: Conversation<MyContext>, ctx: Context) {
     return `${first_name} ${last_name}`;
 }
 
-async function askForMainPurpose(conversation: Conversation<MyContext>, ctx: Context) {
+async function askForMainPurpose(conversation: Conversation<MySessionContext>, ctx: Context) {
     await ctx.reply(
         "Nice! \n\nEveryone joins ProDOS with a different purpose. \nWhat would you say best describes yours?",
         {
@@ -80,7 +80,7 @@ async function askForMainPurpose(conversation: Conversation<MyContext>, ctx: Con
     return optionChosen.callbackQuery.data;
 }
 
-async function askForEmail(conversation: Conversation<MyContext>, ctx: Context) {
+async function askForEmail(conversation: Conversation<MySessionContext>, ctx: Context) {
     await ctx.reply(
         "Nice choice \n\nWould you like to link an email? \nThis helps me sync your progress to web when that feature launches (optional).",
         {
