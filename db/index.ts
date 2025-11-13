@@ -1,20 +1,22 @@
 import mongoose from "mongoose";
-import { session, type SessionFlavor, Bot } from "grammy";
 import { MongoDBAdapter, ISession } from "@grammyjs/storage-mongodb";
 
-// Define what your session data looks like
 export interface SessionData {
   onboardingComplete?: boolean;
   tempHabitName?: string;
-  // add more fields here
+  userId?: string;
+  tempUserData?: {
+    name?: string;
+    email?: string;
+    purpose?: string;
+  };
 }
 
 export async function connectDB() {
   try {
-    await mongoose.connect(process.env.MONGO_URI!);
+    await mongoose.connect(process.env.MONGODB_URI!);
     console.log("✅ Connected to MongoDB");
 
-    // Create MongoDB collection for sessions
     const db = mongoose.connection.db;
 
     if (!db) {
