@@ -23,7 +23,7 @@ const UserSchema = new Schema<IUser>(
         },
         email: {
             type: String,
-            required: true,
+            // required: true,
             lowercase: true,
         },
         purpose: {

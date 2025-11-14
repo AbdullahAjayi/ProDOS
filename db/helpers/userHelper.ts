@@ -12,9 +12,9 @@ export async function createUserFromSession(
 
     const { name, email, purpose } = sessionData.tempUserData;
 
-    if (!name || !email || !purpose) {
-        throw new Error("Incomplete user data: name, email, and purpose are required");
-    }
+    // if (!name || !email || !purpose) {
+    //     throw new Error("Incomplete user data: name, email, and purpose are required");
+    // }
 
     const telegramId = ctx.from?.id;
     if (!telegramId) {

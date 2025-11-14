@@ -2,6 +2,7 @@ import { type Conversation } from "@grammyjs/conversations";
 import { MySessionContext } from "../../bot";
 import { InlineKeyboard, Context, Keyboard } from "grammy";
 import { delay } from "../../utils/helpers";
+import { createHabit as saveHabit } from "../../db/helpers/habitHelper";
 
 // helper to dynamically render selected days
 function getDaysKeyboard(selectedDays: string[]) {
@@ -18,7 +19,7 @@ function getDaysKeyboard(selectedDays: string[]) {
     return keyboard;
 }
 
-async function createHabit(conversation: Conversation<MySessionContext>, ctx: Context, emailOption?: string | null) {
+async function createHabit(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext, emailOption?: string | null) {
     emailOption && await ctx.reply(
         `${emailOption === "Add email ✉️" ? "Now...\n" : "Alright. "}Let’s begin with one small habit you’d like to start building. \n\n<b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`,
         {

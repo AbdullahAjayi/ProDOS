@@ -1,24 +1,61 @@
 import { createConversation, type Conversation } from "@grammyjs/conversations";
-import { InlineKeyboard, Context, Bot, Keyboard } from "grammy";
+import { InlineKeyboard, Context, Bot, Keyboard, SessionFlavor } from "grammy";
 import { MySessionContext } from './bot';
 import { delay } from "./utils/helpers";
 import createHabit from "./logic/habit/createHabit";
+import { SessionData } from "./db";
+import { createUserFromSession } from "./db/helpers/userHelper";
+import { createHabit as saveHabit } from "./db/helpers/habitHelper";
 
 
 export function registerOnboarding(bot: Bot<MySessionContext>) {
-    const startCommand = async (conversation: Conversation<MySessionContext>, ctx: Context) => {
+    const startCommand = async (conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) => {
         const name = await askForName(conversation, ctx);
         const purpose = await askForMainPurpose(conversation, ctx);
         const email = await askForEmail(conversation, ctx);
         const { emailOption } = email;
         const habit = await createHabit(conversation, ctx, emailOption);
+
+        // Save user to database
+        try {
+            ctx.session.tempUserData = {
+                name,
+                email: email.email || "",
+                purpose,
+            };
+
+            const savedUser = await createUserFromSession(ctx, ctx.session);
+            ctx.session.userId = (savedUser._id as any).toString();
+
+            // Save habit to database
+            if (habit && habit.name) {
+                const frequencyMap: { [key: string]: "daily" | "custom" } = {
+                    "everyday": "daily",
+                    "custom": "custom",
+                };
+                await saveHabit({
+                    userId: savedUser._id as any,
+                    name: habit.name,
+                    frequency: frequencyMap[habit.frequency] || "daily",
+                });
+            }
+
+            ctx.session.onboardingComplete = true;
+        } catch (err) {
+            console.error("Error saving user/habit:", err);
+            await ctx.reply("❌ There was an error saving your data. Please try again.", {
+                reply_markup: { remove_keyboard: true },
+            });
+            return;
+        }
+
         await delay(1000, 1500);
         await ctx.reply("<b>🎉 You're all set! Welcome aboard ProDOS 🚀</b>", {
             reply_markup: { remove_keyboard: true }, parse_mode: "HTML",
         });
     };
 
-    bot.use(createConversation(startCommand));
+    bot.use(createConversation(startCommand, "startCommand"));
 
     const inlineKeyboard = new InlineKeyboard()
         .text("Let's begin ✨", "onboard_user");
@@ -40,7 +77,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
 // modular functions
 // ---------------------------
 
-async function askForName(conversation: Conversation<MySessionContext>, ctx: Context) {
+async function askForName(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) {
     const { first_name, last_name } = ctx.from!;
     await ctx.reply(`Great! \n\nI see your name is ${first_name} ${last_name}, should I keep it as that?`, {
         reply_markup: new InlineKeyboard()
@@ -62,7 +99,7 @@ async function askForName(conversation: Conversation<MySessionContext>, ctx: Con
     return `${first_name} ${last_name}`;
 }
 
-async function askForMainPurpose(conversation: Conversation<MySessionContext>, ctx: Context) {
+async function askForMainPurpose(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) {
     await ctx.reply(
         "Nice! \n\nEveryone joins ProDOS with a different purpose. \nWhat would you say best describes yours?",
         {
@@ -80,7 +117,7 @@ async function askForMainPurpose(conversation: Conversation<MySessionContext>, c
     return optionChosen.callbackQuery.data;
 }
 
-async function askForEmail(conversation: Conversation<MySessionContext>, ctx: Context) {
+async function askForEmail(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) {
     await ctx.reply(
         "Nice choice \n\nWould you like to link an email? \nThis helps me sync your progress to web when that feature launches (optional).",
         {
