@@ -21,7 +21,7 @@ async function main() {
   const adapter = await connectDB()
   bot.use(session({
     initial: (): SessionData => ({
-      onboardingComplete: false,
+      onboardingComplete: false
     }),
     storage: adapter
   }))

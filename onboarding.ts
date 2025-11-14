@@ -5,11 +5,17 @@ import { delay } from "./utils/helpers";
 import createHabit from "./logic/habit/createHabit";
 import { SessionData } from "./db";
 import { createUserFromSession } from "./db/helpers/userHelper";
-import { createHabit as saveHabit } from "./db/helpers/habitHelper";
 
 
 export function registerOnboarding(bot: Bot<MySessionContext>) {
     const startCommand = async (conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) => {
+        // Ensure session exists
+        if (!ctx.session) {
+            ctx.session = {
+                onboardingComplete: false,
+            };
+        }
+
         const name = await askForName(conversation, ctx);
         const purpose = await askForMainPurpose(conversation, ctx);
         const email = await askForEmail(conversation, ctx);
