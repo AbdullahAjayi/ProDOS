@@ -14,9 +14,8 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
         const purpose = await askForMainPurpose(conversation, ctx);
         const email = await askForEmail(conversation, ctx);
         const { emailOption } = email;
-        const habit = await createHabit(conversation, ctx, emailOption);
 
-        // Save user to database
+        // Save user to database first
         try {
             ctx.session.tempUserData = {
                 name,
@@ -26,24 +25,20 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
 
             const savedUser = await createUserFromSession(ctx, ctx.session);
             ctx.session.userId = (savedUser._id as any).toString();
+        } catch (err) {
+            console.error("Error saving user:", err);
+            await ctx.reply("❌ There was an error saving your profile. Please try again.", {
+                reply_markup: { remove_keyboard: true },
+            });
+            return;
+        }
 
-            // Save habit to database
-            if (habit && habit.name) {
-                const frequencyMap: { [key: string]: "daily" | "custom" } = {
-                    "everyday": "daily",
-                    "custom": "custom",
-                };
-                await saveHabit({
-                    userId: savedUser._id as any,
-                    name: habit.name,
-                    frequency: frequencyMap[habit.frequency] || "daily",
-                });
-            }
-
+        try {
+            const habit = await createHabit(conversation, ctx, emailOption);
             ctx.session.onboardingComplete = true;
         } catch (err) {
-            console.error("Error saving user/habit:", err);
-            await ctx.reply("❌ There was an error saving your data. Please try again.", {
+            console.error("Error creating habit:", err);
+            await ctx.reply("❌ There was an error creating your habit. Please try again.", {
                 reply_markup: { remove_keyboard: true },
             });
             return;
@@ -53,9 +48,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
         await ctx.reply("<b>🎉 You're all set! Welcome aboard ProDOS 🚀</b>", {
             reply_markup: { remove_keyboard: true }, parse_mode: "HTML",
         });
-    };
-
-    bot.use(createConversation(startCommand, "startCommand"));
+    }; bot.use(createConversation(startCommand, "startCommand"));
 
     const inlineKeyboard = new InlineKeyboard()
         .text("Let's begin ✨", "onboard_user");
