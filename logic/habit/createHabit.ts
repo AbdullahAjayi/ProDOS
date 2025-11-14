@@ -222,7 +222,31 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
         reminderTime,
     };
 
-    await ctx.reply("✅ Your habit has been fully set up!", { reply_markup: { remove_keyboard: true } });
+    // Save habit to database
+    try {
+        if (!ctx.session.userId) {
+            throw new Error("User ID not found in session");
+        }
+
+        const frequencyMap: { [key: string]: "daily" | "custom" } = {
+            "everyday": "daily",
+            "custom": "custom",
+        };
+
+        await saveHabit({
+            userId: ctx.session.userId,
+            name: habitName,
+            frequency: frequencyMap[frequency] || "daily",
+        });
+
+        await ctx.reply("✅ Your habit has been fully set up and saved!", { reply_markup: { remove_keyboard: true } });
+    } catch (err) {
+        console.error("Error saving habit to database:", err);
+        await ctx.reply("⚠️ Habit created but failed to save to database. Please contact support.", {
+            reply_markup: { remove_keyboard: true },
+        });
+    }
+
     console.log("HABIT DATA:", habitData);
 
     return habitData;
