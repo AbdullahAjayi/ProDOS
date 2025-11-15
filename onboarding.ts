@@ -1,9 +1,9 @@
 import { createConversation, type Conversation } from "@grammyjs/conversations";
-import { InlineKeyboard, Context, Bot, Keyboard, SessionFlavor } from "grammy";
+import { InlineKeyboard } from "grammy";
+import { Bot } from "grammy";
 import { MySessionContext } from './bot';
 import { delay } from "./utils/helpers";
 import createHabit from "./logic/habit/createHabit";
-import { SessionData } from "./db";
 import { createUserFromSession } from "./db/helpers/userHelper";
 
 
@@ -39,6 +39,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
             return;
         }
 
+        // Then save user habit
         try {
             const habit = await createHabit(conversation, ctx, emailOption);
             ctx.session.onboardingComplete = true;
