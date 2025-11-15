@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { MongoDBAdapter, ISession } from "@grammyjs/storage-mongodb";
+import { MongoDBAdapter } from "@grammyjs/storage-mongodb";
 
 export interface SessionData {
   onboardingComplete?: boolean;
@@ -23,7 +23,7 @@ export async function connectDB() {
       throw new Error('Database not initialized yet')
     }
 
-    const collection = db.collection<ISession>("sessions");
+    const collection = db.collection("conversations");
     return new MongoDBAdapter({ collection });
   } catch (err) {
     console.error("❌ MongoDB connection failed:", err);

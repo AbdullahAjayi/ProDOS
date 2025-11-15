@@ -3,6 +3,7 @@ import { MySessionContext } from "../../bot";
 import { InlineKeyboard, Context, Keyboard } from "grammy";
 import { delay } from "../../utils/helpers";
 import { createHabit as saveHabit } from "../../db/helpers/habitHelper";
+import { getUserId } from "../../db/helpers/sessionHelper";
 
 // helper to dynamically render selected days
 function getDaysKeyboard(selectedDays: string[]) {
@@ -224,19 +225,24 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
 
     // Save habit to database
     try {
-        if (!ctx.session.userId) {
-            throw new Error("User ID not found in session");
-        }
-
         const frequencyMap: { [key: string]: "daily" | "custom" } = {
             "everyday": "daily",
             "custom": "custom",
         };
 
-        await saveHabit({
-            userId: ctx.session.userId,
-            name: habitName,
-            frequency: frequencyMap[frequency] || "daily",
+        // Wrap database call in conversation.external()
+        await conversation.external(async () => {
+            // Get userId from database (Rule I: all side-effects must be wrapped)
+            const userId = await getUserId(ctx);
+            if (!userId) {
+                throw new Error("User ID not found. Please complete onboarding first.");
+            }
+
+            await saveHabit({
+                userId,
+                name: habitName,
+                frequency: frequencyMap[frequency] || "daily",
+            })
         });
 
         await ctx.reply("✅ Your habit has been fully set up and saved!", { reply_markup: { remove_keyboard: true } });

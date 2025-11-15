@@ -6,15 +6,8 @@ import { delay } from "./utils/helpers";
 import createHabit from "./logic/habit/createHabit";
 import { createUserFromSession } from "./db/helpers/userHelper";
 
-
 export function registerOnboarding(bot: Bot<MySessionContext>) {
     const startCommand = async (conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) => {
-        // Ensure session exists
-        if (!ctx.session) {
-            ctx.session = {
-                onboardingComplete: false,
-            };
-        }
 
         const name = await askForName(conversation, ctx);
         const purpose = await askForMainPurpose(conversation, ctx);
@@ -23,14 +16,15 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
 
         // Save user to database first
         try {
-            ctx.session.tempUserData = {
-                name,
-                email: email.email || "",
-                purpose,
-            };
+            await conversation.external(async () => {
+                const tempUserData = {
+                    name,
+                    email: email.email || "",
+                    purpose,
+                };
 
-            const savedUser = await createUserFromSession(ctx, ctx.session);
-            ctx.session.userId = (savedUser._id as any).toString();
+                await createUserFromSession(ctx, { tempUserData });
+            });
         } catch (err) {
             console.error("Error saving user:", err);
             await ctx.reply("❌ There was an error saving your profile. Please try again.", {
@@ -42,7 +36,6 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
         // Then save user habit
         try {
             const habit = await createHabit(conversation, ctx, emailOption);
-            ctx.session.onboardingComplete = true;
         } catch (err) {
             console.error("Error creating habit:", err);
             await ctx.reply("❌ There was an error creating your habit. Please try again.", {

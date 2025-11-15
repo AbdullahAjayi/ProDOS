@@ -21,13 +21,15 @@ export async function createUserFromSession(
         throw new Error("Unable to get Telegram user ID");
     }
 
-    const updatedUser = await User.findOneAndUpdate(
-        { telegramId },
-        { status: { active: true } },
-        { returnDocument: "after" }
-    );
-    if (updatedUser) {
-        return updatedUser;
+    // Check if user already exists
+    const existingUser = await User.findOne({ telegramId });
+    if (existingUser) {
+        // Update existing user with new data
+        existingUser.name = name!;
+        existingUser.email = email!;
+        existingUser.purpose = purpose!;
+        await existingUser.save();
+        return existingUser;
     }
 
     // Create new user

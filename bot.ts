@@ -1,11 +1,11 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { Bot, Context, session, SessionFlavor } from 'grammy';
+import { Bot, Context } from 'grammy';
 import { type ConversationFlavor, conversations, createConversation } from "@grammyjs/conversations";
 import { registerOnboarding } from "./onboarding";
 import createHabit from "./logic/habit/createHabit";
-import { connectDB, SessionData } from "./db";
+import { connectDB } from "./db";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 if (!BOT_TOKEN) {
@@ -13,23 +13,16 @@ if (!BOT_TOKEN) {
 }
 
 type MyContext = ConversationFlavor<Context>;
-export type MySessionContext = MyContext & SessionFlavor<SessionData>;
+export type MySessionContext = MyContext;
 
 async function main() {
   const bot = new Bot<MySessionContext>(BOT_TOKEN);
 
   const adapter = await connectDB();
 
-  bot.use(session({
-    initial: (): SessionData => ({
-      onboardingComplete: false
-    }),
-    storage: adapter
+  bot.use(conversations({
+    storage: adapter as any
   }));
-
-  (bot as any).sessionAdapter = adapter;
-
-  bot.use(conversations())
 
   // Set Bot Commands
   await bot.api.setMyCommands([
