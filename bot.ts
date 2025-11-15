@@ -18,13 +18,16 @@ export type MySessionContext = MyContext & SessionFlavor<SessionData>;
 async function main() {
   const bot = new Bot<MySessionContext>(BOT_TOKEN);
 
-  const adapter = await connectDB()
+  const adapter = await connectDB();
+
   bot.use(session({
     initial: (): SessionData => ({
       onboardingComplete: false
     }),
     storage: adapter
-  }))
+  }));
+
+  (bot as any).sessionAdapter = adapter;
 
   bot.use(conversations())
 
