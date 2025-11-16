@@ -1,9 +1,10 @@
 import { type Conversation } from "@grammyjs/conversations";
 import { MySessionContext } from "../../bot";
-import { InlineKeyboard, Context, Keyboard } from "grammy";
+import { InlineKeyboard, Keyboard } from "grammy";
 import { delay } from "../../utils/helpers";
 import { createHabit as saveHabit } from "../../db/helpers/habitHelper";
 import { getUserId } from "../../db/helpers/sessionHelper";
+import { User } from "../../db/models/User";
 
 // helper to dynamically render selected days
 function getDaysKeyboard(selectedDays: string[]) {
@@ -170,8 +171,8 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
         while (true) {
             const customRes = await conversation.waitFor("message:text");
             reminderTime = customRes.message.text.trim();
-            console.log("[time][custom input] ", reminderTime); // trace each custom attempt
 
+            console.log("[time][custom input] ", reminderTime);
             // normalize (remove emojis / extra chars) before validating
             const normalized = reminderTime.replace(/[^\d:APMapm ]/g, "").trim();
 
@@ -232,32 +233,41 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
 
         // Wrap database call in conversation.external()
         await conversation.external(async () => {
-            // Get userId from database (Rule I: all side-effects must be wrapped)
+            // Get userId from database
             const userId = await getUserId(ctx);
             if (!userId) {
                 throw new Error("User ID not found. Please complete onboarding first.");
             }
 
-            await saveHabit({
+            // Get user to get telegramId for reminder scheduling
+            const user = await User.findById(userId);
+            if (!user) {
+                throw new Error("User not found");
+            }
+
+            // Save habit with all data
+            const savedHabit = await saveHabit({
                 userId,
                 name: habitName,
                 frequency: frequencyMap[frequency] || "daily",
-            })
+                reminderTime,
+                days,
+                type: habitType === "yesno" ? "Yes-or-No" : "Measurable",
+                ...(unit && { unit }),
+                ...(target && { target }),
+            });
         });
 
         await ctx.reply("✅ Your habit has been fully set up and saved!", { reply_markup: { remove_keyboard: true } });
     } catch (err) {
         console.error("Error saving habit to database:", err);
-        await ctx.reply("⚠️ Habit created but failed to save to database. Please contact support.", {
+        await ctx.reply("⚠️ Habit created but failed to save to database...", {
             reply_markup: { remove_keyboard: true },
         });
     }
 
     console.log("HABIT DATA:", habitData);
-
     return habitData;
-
-
 }
 
 export default createHabit;
