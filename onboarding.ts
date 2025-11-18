@@ -48,7 +48,9 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
         await ctx.reply("<b>🎉 You're all set! Welcome aboard ProDOS 🚀</b>", {
             reply_markup: { remove_keyboard: true }, parse_mode: "HTML",
         });
-    }; bot.use(createConversation(startCommand, "startCommand"));
+    };
+
+    bot.use(createConversation(startCommand, "startCommand"));
 
     const inlineKeyboard = new InlineKeyboard()
         .text("Let's begin ✨", "onboard_user");
@@ -62,7 +64,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
 
     bot.callbackQuery("onboard_user", async (ctx) => {
         await ctx.answerCallbackQuery();
-        await ctx.conversation.enter("startCommand");
+        await ctx.conversation.enter('startCommand');
     });
 }
 

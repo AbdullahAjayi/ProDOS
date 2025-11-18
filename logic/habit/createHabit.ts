@@ -4,6 +4,7 @@ import { InlineKeyboard, Keyboard } from "grammy";
 import { delay } from "../../utils/helpers";
 import { createHabit as saveHabit } from "../../db/helpers/habitHelper";
 import { getUserId } from "../../db/helpers/sessionHelper";
+import { scheduleReminder } from "../reminders/reminderService";
 import { User } from "../../db/models/User";
 
 // helper to dynamically render selected days
@@ -256,6 +257,11 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
                 ...(unit && { unit }),
                 ...(target && { target }),
             });
+
+            // Schedule reminder if reminderTime is set
+            if (reminderTime) {
+                await scheduleReminder(savedHabit, user.telegramId);
+            }
         });
 
         await ctx.reply("✅ Your habit has been fully set up and saved!", { reply_markup: { remove_keyboard: true } });
