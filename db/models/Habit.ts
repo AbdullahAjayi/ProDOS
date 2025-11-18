@@ -1,6 +1,7 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface IHabit extends Document {
+    _id: Types.ObjectId;
     userId: Types.ObjectId;
     name: string;
     description?: string;
