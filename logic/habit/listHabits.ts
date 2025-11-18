@@ -111,7 +111,7 @@ export async function listHabits(ctx: MySessionContext): Promise<void> {
         message += `   ${status}\n\n`;
 
         // Add inline buttons for each habit
-        keyboard.text(`📝 ${habit.name}`, `habit_${habit._id}`).row();
+        keyboard.text(`${habit.name}`, `habit_${habit._id}`).row();
     });
 
     message += "\n💡 <i>Tap a habit to log it or manage it</i>";
