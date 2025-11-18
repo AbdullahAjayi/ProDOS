@@ -9,7 +9,7 @@ import { connectDB } from "./db";
 import { initializeReminderService } from "./logic/reminders/reminderService";
 import { listHabits } from "./logic/habit/listHabits";
 import { logHabitSimple } from "./logic/habit/logHabit";
-import updateReminderConversation from "./logic/reminders/updateReminder";
+// import updateHabitConversation from "./logic/habit/updateHabit";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 if (!BOT_TOKEN) {
@@ -42,7 +42,7 @@ async function main() {
 
     { command: "list_habits", description: "List all your habits" },
 
-    { command: "update_reminder", description: "Update reminder for a habit" },
+    // { command: "update_habit", description: "Update a habit" },
 
   ])
     .catch(err => console.log(err))
@@ -57,9 +57,9 @@ async function main() {
   // List habits command
   bot.command('list_habits', async (ctx) => await listHabits(ctx));
 
-  // Update reminder command
-  bot.use(createConversation(updateReminderConversation, "updateReminder"));
-  bot.command('update_reminder', async (ctx) => await ctx.conversation.enter("updateReminder"));
+  // Update habit command
+  // bot.use(createConversation(updateHabitConversation, "updateHabit"));
+  // bot.command('update_habit', async (ctx) => await ctx.conversation.enter("updateHabit"));
 
   // Handle callback queries for logging habits
   bot.callbackQuery(/^log_habit_(.+)$/, async (ctx) => {
@@ -80,12 +80,18 @@ async function main() {
       inline_keyboard: [
         [
           { text: "✅ Log Habit", callback_data: `log_habit_${habitId}` },
-          { text: "⏰ Update Reminder", callback_data: `update_reminder_${habitId}` },
+          { text: "📝 Update Habit", callback_data: `update_habit_${habitId}` },
         ],
       ],
     };
 
     await ctx.reply("What would you like to do?", { reply_markup: keyboard });
+  });
+
+  // Handle update habit callback
+  bot.callbackQuery(/^update_habit_(.+)$/, async (ctx) => {
+    const habitId = ctx.match[1];
+    await ctx.conversation.enter("updateHabit", { habitId });
   });
 
   // Handle skip reminder callback
