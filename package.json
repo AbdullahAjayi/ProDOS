@@ -14,9 +14,11 @@
   "dependencies": {
     "@grammyjs/conversations": "^2.1.0",
     "@grammyjs/storage-mongodb": "^2.5.1",
+    "@types/node-cron": "^3.0.11",
     "dotenv": "^17.2.3",
     "grammy": "^1.38.3",
-    "mongoose": "^8.19.3"
+    "mongoose": "^8.19.3",
+    "node-cron": "^4.2.1"
   },
   "devDependencies": {
     "@types/node": "^24.9.2",
