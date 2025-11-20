@@ -9,12 +9,16 @@ const scheduledJobs = new Map<string, import("node-cron").ScheduledTask>();
 // Store bot instance for sending reminders
 let botInstance: Bot | null = null;
 
+// Track which habits had reminders sent today (habitId -> date string YYYY-MM-DD)
+const reminderssentToday = new Map<string, string>();
+
 
 /**
  * Initialize the reminder service with bot instance
  */
 export function initializeReminderService(bot: Bot) {
     botInstance = bot;
+    startReminderChecker();
 }
 
 /**
@@ -193,6 +197,17 @@ export async function updateReminder(
 async function sendReminderNotification(habit: IHabit, telegramId: number): Promise<void> {
     if (!botInstance) return;
 
+    const habitId = habit._id.toString();
+    const today = new Date().toISOString().split('T')[0] ?? ""; // Get date as YYYY-MM-DD
+    const lastSentDate = reminderssentToday.get(habitId);
+
+    // Skip if reminder was already sent today
+    if (lastSentDate === today) {
+        return;
+    }
+
+    reminderssentToday.set(habitId, today);
+
     const message = `🔔 <b>Reminder: ${habit.name}</b>\n\nTime to log your habit!`;
 
     const keyboard = {
@@ -263,4 +278,14 @@ export async function checkAndSendReminders(): Promise<void> {
     } catch (error) {
         console.error("Error checking reminders:", error);
     }
+}
+
+/**
+ * Start the reminder checker (runs every minute as backup)
+ */
+function startReminderChecker(): void {
+    // Run every minute as a backup to cron jobs
+    cron.schedule("* * * * *", async () => {
+        await checkAndSendReminders();
+    });
 }
