@@ -108,6 +108,10 @@ async function main() {
 
   console.log(".\n.\n.\nProDOS Telegram Bot is running...");
   bot.start()
+
+  bot.catch((err) => {
+    console.error("Bot error:", err.error);
+  });
 }
 
 main().catch(err => {
