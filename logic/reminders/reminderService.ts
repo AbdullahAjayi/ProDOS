@@ -15,7 +15,6 @@ let botInstance: Bot | null = null;
  */
 export function initializeReminderService(bot: Bot) {
     botInstance = bot;
-    startReminderChecker();
 }
 
 /**
@@ -265,14 +264,3 @@ export async function checkAndSendReminders(): Promise<void> {
         console.error("Error checking reminders:", error);
     }
 }
-
-/**
- * Start the reminder checker (runs every minute as backup)
- */
-function startReminderChecker(): void {
-    // Run every minute as a backup to cron jobs
-    cron.schedule("* * * * *", async () => {
-        await checkAndSendReminders();
-    });
-}
-
