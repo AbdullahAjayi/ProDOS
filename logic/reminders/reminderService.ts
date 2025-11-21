@@ -271,6 +271,7 @@ export async function checkAndSendReminders(): Promise<void> {
             ) {
                 const user = await User.findById(habit.userId);
                 if (user) {
+                    console.log(`Sending reminder to user: ${user.name}, ${user.telegramId}`)
                     await sendReminderNotification(habit, user.telegramId);
                 }
             }
