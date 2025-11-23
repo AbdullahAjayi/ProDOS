@@ -269,6 +269,13 @@ export async function checkAndSendReminders(): Promise<void> {
                 currentHour === reminderHour &&
                 Math.abs(currentMinute - reminderMinute) <= 1
             ) {
+                // Check if reminder was already sent today
+                const habitId = habit._id.toString();
+                const today = new Date().toISOString().split('T')[0] ?? "";
+                if (reminderssentToday.get(habitId) === today) {
+                    continue;
+                }
+
                 const user = await User.findById(habit.userId);
                 if (user) {
                     console.log(`Sending reminder to user: ${user.name}, ${user.telegramId}`)
