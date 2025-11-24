@@ -1,11 +1,11 @@
 import { type Conversation } from "@grammyjs/conversations";
-import { MySessionContext } from "../../bot";
+import { MySessionContext } from "../../bot.js";
 import { InlineKeyboard, Keyboard } from "grammy";
-import { delay } from "../../utils/helpers";
-import { createHabit as saveHabit } from "../../db/helpers/habitHelper";
-import { getUserId } from "../../db/helpers/sessionHelper";
-import { scheduleReminder } from "../reminders/reminderService";
-import { User } from "../../db/models/User";
+import { delay } from "../../utils/helpers.js";
+import { createHabit as saveHabit } from "../../db/helpers/habitHelper.js";
+import { getUserId } from "../../db/helpers/sessionHelper.js";
+import { scheduleReminder } from "../reminders/reminderService.js";
+import { User } from "../../db/models/User.js";
 
 // helper to dynamically render selected days
 function getDaysKeyboard(selectedDays: string[]) {

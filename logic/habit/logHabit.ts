@@ -1,7 +1,7 @@
 import { type Conversation } from "@grammyjs/conversations";
-import { MySessionContext } from "../../bot";
-import { Habit } from "../../db/models/Habit";
-import { cancelReminder } from "../reminders/reminderService";
+import { MySessionContext } from "../../bot.js";
+import { Habit } from "../../db/models/Habit.js";
+import { cancelReminder } from "../reminders/reminderService.js";
 
 /**
  * Check if habit was already logged today

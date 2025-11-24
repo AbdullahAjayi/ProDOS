@@ -1,12 +1,13 @@
 {
   "name": "prodos_telegram",
   "version": "1.0.0",
-  "type": "commonjs",
+  "type": "module",
   "description": "",
   "main": "bot.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only bot.ts"
+    "start": "tsx bot.ts",
+    "dev": "tsx watch bot.ts"
   },
   "keywords": [],
   "author": "",
@@ -18,11 +19,13 @@
     "dotenv": "^17.2.3",
     "grammy": "^1.38.3",
     "mongoose": "^8.19.3",
-    "node-cron": "^4.2.1"
+    "node-cron": "^4.2.1",
+    "ts-node": "^10.9.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
   },
   "devDependencies": {
     "@types/node": "^24.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
+    "ts-node-dev": "^2.0.0"
   }
 }

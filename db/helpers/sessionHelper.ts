@@ -1,4 +1,4 @@
-import { User, IUser } from "../models/User";
+import { User, IUser } from "../models/User.js";
 import { Context } from "grammy";
 
 /**

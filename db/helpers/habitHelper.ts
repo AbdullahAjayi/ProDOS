@@ -1,4 +1,4 @@
-import { Habit, IHabit } from "../models/Habit";
+import { Habit, IHabit } from "../models/Habit.js";
 import { Types } from "mongoose";
 
 export interface CreateHabitInput {

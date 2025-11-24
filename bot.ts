@@ -3,12 +3,12 @@ dotenv.config();
 
 import { Bot, Context } from 'grammy';
 import { type ConversationFlavor, conversations, createConversation } from "@grammyjs/conversations";
-import { registerOnboarding } from "./onboarding";
-import createHabit from "./logic/habit/createHabit";
-import { connectDB } from "./db";
-import { initializeReminderService } from "./logic/reminders/reminderService";
-import { listHabits } from "./logic/habit/listHabits";
-import { logHabitSimple } from "./logic/habit/logHabit";
+import { registerOnboarding } from "./onboarding.js";
+import createHabit from "./logic/habit/createHabit.js";
+import { connectDB } from "./db/index.js";
+import { initializeReminderService } from "./logic/reminders/reminderService.js";
+import { listHabits } from "./logic/habit/listHabits.js";
+import { logHabitSimple } from "./logic/habit/logHabit.js";
 // import updateHabitConversation from "./logic/habit/updateHabit";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;

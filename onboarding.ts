@@ -1,10 +1,10 @@
 import { createConversation, type Conversation } from "@grammyjs/conversations";
 import { InlineKeyboard } from "grammy";
 import { Bot } from "grammy";
-import { MySessionContext } from './bot';
-import { delay } from "./utils/helpers";
-import createHabit from "./logic/habit/createHabit";
-import { createUserFromSession } from "./db/helpers/userHelper";
+import { MySessionContext } from './bot.js';
+import { delay } from "./utils/helpers.js";
+import createHabit from "./logic/habit/createHabit.js";
+import { createUserFromSession } from "./db/helpers/userHelper.js";
 
 export function registerOnboarding(bot: Bot<MySessionContext>) {
     const startCommand = async (conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) => {

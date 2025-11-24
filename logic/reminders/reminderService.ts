@@ -1,7 +1,7 @@
 import cron from "node-cron";
 import { Bot } from "grammy";
-import { Habit, IHabit } from "../../db/models/Habit";
-import { User } from "../../db/models/User";
+import { Habit, IHabit } from "../../db/models/Habit.js";
+import { User } from "../../db/models/User.js";
 
 // Store scheduled cron jobs by habitId
 const scheduledJobs = new Map<string, import("node-cron").ScheduledTask>();

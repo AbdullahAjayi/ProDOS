@@ -1,5 +1,5 @@
-import { User, IUser } from "../models/User";
-import { SessionData } from "../index";
+import { User, IUser } from "../models/User.js";
+import { SessionData } from "../index.js";
 import { Context } from "grammy";
 
 export async function createUserFromSession(

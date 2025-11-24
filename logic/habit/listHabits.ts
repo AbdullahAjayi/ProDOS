@@ -1,7 +1,7 @@
 import { InlineKeyboard } from "grammy";
-import { MySessionContext } from "../../bot";
-import { getHabitsByUser } from "../../db/helpers/habitHelper";
-import { getUserId } from "../../db/helpers/sessionHelper";
+import { MySessionContext } from "../../bot.js";
+import { getHabitsByUser } from "../../db/helpers/habitHelper.js";
+import { getUserId } from "../../db/helpers/sessionHelper.js";
 
 /**
  * Get streak emoji based on streak count
