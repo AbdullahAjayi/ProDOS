@@ -6,7 +6,6 @@ import { User } from "../../db/models/User.js";
 // Store scheduled cron jobs by habitId
 const scheduledJobs = new Map<string, import("node-cron").ScheduledTask>();
 
-// Store bot instance for sending reminders
 let botInstance: Bot | null = null;
 
 // Track which habits had reminders sent today (habitId -> date string YYYY-MM-DD)
@@ -18,7 +17,41 @@ const reminderssentToday = new Map<string, string>();
  */
 export function initializeReminderService(bot: Bot) {
     botInstance = bot;
-    startReminderChecker();
+
+    // Load reminders in the background (non-blocking)
+    loadExistingReminders().catch(error => {
+        console.error("Failed to load existing reminders:", error);
+    });
+
+    console.log("✅ Reminder service initialized");
+}
+
+/**
+ * Load all existing habits from database and schedule their reminders
+ */
+async function loadExistingReminders(): Promise<void> {
+    try {
+        const habits = await Habit.find({
+            reminderTime: { $exists: true, $ne: null },
+        }).populate("userId");
+
+        // Schedule all habits in parallel for better performance
+        const schedulePromises = habits.map(async (habit) => {
+            const user = await User.findById(habit.userId);
+            if (user && habit.reminderTime) {
+                await scheduleReminder(habit, user.telegramId);
+                return true; // Successfully scheduled
+            }
+            return false; // Not scheduled
+        });
+
+        const results = await Promise.all(schedulePromises);
+        const scheduledCount = results.filter(Boolean).length;
+
+        console.log(`📅 Loaded and scheduled ${scheduledCount} existing reminders`);
+    } catch (error) {
+        console.error("Error loading existing reminders:", error);
+    }
 }
 
 /**
@@ -112,10 +145,7 @@ export async function scheduleReminder(
             async () => {
                 if (!botInstance) return;
 
-                // Check if reminder should be sent today
-                if (!shouldSendReminderToday(habit)) {
-                    return;
-                }
+                console.log(`Reminder triggered for habit: ${habit.name}`);
 
                 // Check if habit was already logged today
                 if (habit.lastLoggedAt) {
@@ -126,20 +156,21 @@ export async function scheduleReminder(
                         lastLogged.getMonth() === today.getMonth() &&
                         lastLogged.getFullYear() === today.getFullYear()
                     ) {
+                        console.log(`Skipping reminder - already logged today`);
                         return; // Already logged today
                     }
                 }
 
                 // Send reminder
+                console.log(`Sending reminder for habit: ${habit.name} to ${(await habit.populate('userId')).name}`);
                 await sendReminderNotification(habit, telegramId);
             },
             {
-                timezone: "UTC", // TODO: Support user timezones
+                timezone: "Africa/Lagos", // TODO: Support user timezones
             }
         );
 
         scheduledJobs.set(habit._id.toString(), job);
-        console.log(`✅ Scheduled reminder for habit: ${habit.name} at ${habit.reminderTime}`);
     } catch (error) {
         console.error(`Error scheduling reminder for habit ${habit.name}:`, error);
         throw error;
@@ -172,7 +203,7 @@ export async function updateReminder(
         throw new Error("Habit not found");
     }
 
-    // Get user to get telegramId
+    // Get user associated with the habit to retrieve their telegramId
     const user = await User.findById(habit.userId);
     if (!user) {
         throw new Error("User not found");
@@ -195,6 +226,11 @@ export async function updateReminder(
  * Send reminder notification
  */
 async function sendReminderNotification(habit: IHabit, telegramId: number): Promise<void> {
+    if (process.env.NODE_ENV === 'development' && telegramId !== 2118957209) {
+        console.log(`Skipping reminder for habit ${habit._id} in development mode for ${telegramId}.`);
+        return;
+    }
+
     if (!botInstance) return;
 
     const habitId = habit._id.toString();
@@ -227,73 +263,4 @@ async function sendReminderNotification(habit: IHabit, telegramId: number): Prom
     } catch (error) {
         console.error(`Error sending reminder to ${telegramId}:`, error);
     }
-}
-
-/**
- * Check and send reminders (called periodically)
- * This is a backup mechanism in case cron jobs fail
- */
-export async function checkAndSendReminders(): Promise<void> {
-    if (!botInstance) return;
-
-    try {
-        const habits = await Habit.find({
-            reminderTime: { $exists: true, $ne: null },
-        }).populate("userId");
-
-        const now = new Date();
-        const currentHour = now.getHours();
-        const currentMinute = now.getMinutes();
-
-        for (const habit of habits) {
-            if (!habit.reminderTime || !shouldSendReminderToday(habit)) {
-                continue;
-            }
-
-            // Parse reminder time
-            const timeMatch = habit.reminderTime.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
-            if (!timeMatch || !timeMatch[1] || !timeMatch[2] || !timeMatch[3]) continue;
-
-            let reminderHour = parseInt(timeMatch[1] as string);
-            const reminderMinute = parseInt(timeMatch[2] as string);
-            const period = (timeMatch[3] as string).toUpperCase();
-
-            if (period === "PM" && reminderHour !== 12) {
-                reminderHour += 12;
-            } else if (period === "AM" && reminderHour === 12) {
-                reminderHour = 0;
-            }
-
-            // Check if it's time to send (within 1 minute window)
-            if (
-                currentHour === reminderHour &&
-                Math.abs(currentMinute - reminderMinute) <= 1
-            ) {
-                // Check if reminder was already sent today
-                const habitId = habit._id.toString();
-                const today = new Date().toISOString().split('T')[0] ?? "";
-                if (reminderssentToday.get(habitId) === today) {
-                    continue;
-                }
-
-                const user = await User.findById(habit.userId);
-                if (user) {
-                    console.log(`Sending reminder to user: ${user.name}, ${user.telegramId}`)
-                    await sendReminderNotification(habit, user.telegramId);
-                }
-            }
-        }
-    } catch (error) {
-        console.error("Error checking reminders:", error);
-    }
-}
-
-/**
- * Start the reminder checker (runs every minute as backup)
- */
-function startReminderChecker(): void {
-    // Run every minute as a backup to cron jobs
-    cron.schedule("* * * * *", async () => {
-        await checkAndSendReminders();
-    });
 }
