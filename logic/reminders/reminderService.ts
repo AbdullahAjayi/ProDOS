@@ -3,22 +3,14 @@ import { Bot } from "grammy";
 import { Habit, IHabit } from "../../db/models/Habit.js";
 import { User } from "../../db/models/User.js";
 
-// Store scheduled cron jobs by habitId
 const scheduledJobs = new Map<string, import("node-cron").ScheduledTask>();
-
 let botInstance: Bot | null = null;
-
-// Track which habits had reminders sent today (habitId -> date string YYYY-MM-DD)
 const reminderssentToday = new Map<string, string>();
 
-
-/**
- * Initialize the reminder service with bot instance
- */
+// Initialize the reminder service with bot instance
 export function initializeReminderService(bot: Bot) {
     botInstance = bot;
 
-    // Load reminders in the background (non-blocking)
     loadExistingReminders().catch(error => {
         console.error("Failed to load existing reminders:", error);
     });
@@ -26,23 +18,20 @@ export function initializeReminderService(bot: Bot) {
     console.log("✅ Reminder service initialized");
 }
 
-/**
- * Load all existing habits from database and schedule their reminders
- */
+// Load all existing habits from database and schedule their reminders
 async function loadExistingReminders(): Promise<void> {
     try {
         const habits = await Habit.find({
             reminderTime: { $exists: true, $ne: null },
         }).populate("userId");
 
-        // Schedule all habits in parallel for better performance
         const schedulePromises = habits.map(async (habit) => {
             const user = await User.findById(habit.userId);
             if (user && habit.reminderTime) {
                 await scheduleReminder(habit, user.telegramId);
-                return true; // Successfully scheduled
+                return true;
             }
-            return false; // Not scheduled
+            return false;
         });
 
         const results = await Promise.all(schedulePromises);
@@ -54,11 +43,8 @@ async function loadExistingReminders(): Promise<void> {
     }
 }
 
-/**
- * Convert 12-hour time (e.g., "9:00 PM") to cron format
- */
+// Convert 12-hour time to cron format
 function timeToCron(time: string, days: string[]): string {
-    // Parse time like "9:00 PM" or "6:00 AM"
     const timeMatch = time.match(/(\d{1,2}):(\d{2})\s?(AM|PM)/i);
     if (!timeMatch) {
         throw new Error(`Invalid time format: ${time}`);
@@ -76,14 +62,12 @@ function timeToCron(time: string, days: string[]): string {
     const minute = parseInt(minuteString, 10);
     const period = periodString.toUpperCase();
 
-    // Convert to 24-hour format
     if (period === "PM" && hour !== 12) {
         hour += 12;
     } else if (period === "AM" && hour === 12) {
         hour = 0;
     }
 
-    // Map days to cron day format (0 = Sunday, 1 = Monday, etc.)
     const dayMap: { [key: string]: number } = {
         "Sun": 0,
         "Mon": 1,
@@ -95,33 +79,14 @@ function timeToCron(time: string, days: string[]): string {
     };
 
     if (days && days.length > 0) {
-        // Custom days - create cron expression for specific days
         const cronDays = days.map((day) => dayMap[day]).join(",");
         return `${minute} ${hour} * * ${cronDays}`;
     } else {
-        // Daily - every day
         return `${minute} ${hour} * * *`;
     }
 }
 
-/**
- * Check if reminder should be sent today
- */
-function shouldSendReminderToday(habit: IHabit): boolean {
-    if (!habit.days || habit.days.length === 0) {
-        return true; // Daily habit
-    }
-
-    const today = new Date();
-    const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const todayName = dayNames[today.getDay()];
-
-    return habit.days.includes(todayName!);
-}
-
-/**
- * Schedule a reminder for a habit
- */
+// Schedule a reminder for a habit
 export async function scheduleReminder(
     habit: IHabit,
     telegramId: number
@@ -131,10 +96,9 @@ export async function scheduleReminder(
     }
 
     if (!habit.reminderTime) {
-        return; // No reminder time set
+        return;
     }
 
-    // Cancel existing reminder if any
     cancelReminder(habit._id.toString());
 
     try {
@@ -147,7 +111,6 @@ export async function scheduleReminder(
 
                 console.log(`Reminder triggered for habit: ${habit.name}`);
 
-                // Check if habit was already logged today
                 if (habit.lastLoggedAt) {
                     const lastLogged = new Date(habit.lastLoggedAt);
                     const today = new Date();
@@ -157,16 +120,15 @@ export async function scheduleReminder(
                         lastLogged.getFullYear() === today.getFullYear()
                     ) {
                         console.log(`Skipping reminder - already logged today`);
-                        return; // Already logged today
+                        return;
                     }
                 }
 
-                // Send reminder
                 console.log(`Sending reminder for habit: ${habit.name} to ${(await habit.populate('userId')).name}`);
                 await sendReminderNotification(habit, telegramId);
             },
             {
-                timezone: "Africa/Lagos", // TODO: Support user timezones
+                timezone: "Africa/Lagos",
             }
         );
 
@@ -177,9 +139,7 @@ export async function scheduleReminder(
     }
 }
 
-/**
- * Cancel a scheduled reminder
- */
+// Cancel a scheduled reminder
 export function cancelReminder(habitId: string): void {
     const job = scheduledJobs.get(habitId);
     if (job) {
@@ -189,27 +149,22 @@ export function cancelReminder(habitId: string): void {
     }
 }
 
-/**
- * Update reminder schedule
- */
+// Update reminder schedule
 export async function updateReminder(
     habitId: string,
     newTime?: string,
     newDays?: string[]
 ): Promise<void> {
-    // Get habit from database
     const habit = await Habit.findById(habitId);
     if (!habit) {
         throw new Error("Habit not found");
     }
 
-    // Get user associated with the habit to retrieve their telegramId
     const user = await User.findById(habit.userId);
     if (!user) {
         throw new Error("User not found");
     }
 
-    // Update habit
     if (newTime) {
         habit.reminderTime = newTime;
     }
@@ -218,13 +173,10 @@ export async function updateReminder(
     }
     await habit.save();
 
-    // Reschedule reminder
     await scheduleReminder(habit, user.telegramId);
 }
 
-/**
- * Send reminder notification
- */
+// Send reminder notification
 async function sendReminderNotification(habit: IHabit, telegramId: number): Promise<void> {
     if (process.env.NODE_ENV === 'development' && telegramId !== 2118957209) {
         console.log(`Skipping reminder for habit ${habit._id} in development mode for ${telegramId}.`);
@@ -234,10 +186,9 @@ async function sendReminderNotification(habit: IHabit, telegramId: number): Prom
     if (!botInstance) return;
 
     const habitId = habit._id.toString();
-    const today = new Date().toISOString().split('T')[0] ?? ""; // Get date as YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0] ?? "";
     const lastSentDate = reminderssentToday.get(habitId);
 
-    // Skip if reminder was already sent today
     if (lastSentDate === today) {
         return;
     }
