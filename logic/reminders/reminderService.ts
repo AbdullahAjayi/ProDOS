@@ -99,6 +99,11 @@ export async function scheduleReminder(
         return;
     }
 
+    const user = await User.findById(habit.userId);
+    if (!user) {
+        throw new Error("User not found");
+    }
+
     cancelReminder(habit._id.toString());
 
     try {
@@ -124,8 +129,8 @@ export async function scheduleReminder(
                     }
                 }
 
-                console.log(`Sending reminder for habit: ${habit.name} to ${(await habit.populate('userId')).name}`);
-                await sendReminderNotification(habit, telegramId);
+                console.log(`Sending reminder for habit: ${habit.name} to ${user.name}`);
+                await sendReminderNotification(habit, user.telegramId);
             },
             {
                 timezone: "Africa/Lagos",
