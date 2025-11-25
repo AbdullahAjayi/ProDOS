@@ -272,8 +272,7 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
         });
     }
 
-    console.log("HABIT DATA:", habitData);
-    return habitData;
+    console.log(`New habit created by ${ctx.from?.username}:`, habitData);
 }
 
 export default createHabit;
