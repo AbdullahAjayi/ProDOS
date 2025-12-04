@@ -28,7 +28,7 @@ async function main() {
     // storage: adapter as any
   }));
 
-  // Initialize reminder service
+  // Initialize reminder service (loads reminders in background)
   initializeReminderService(bot as any);
 
   // Set Bot Commands
@@ -98,6 +98,20 @@ async function main() {
   bot.callbackQuery(/^skip_reminder_(.+)$/, async (ctx) => {
     await ctx.answerCallbackQuery({ text: "Reminder skipped", show_alert: false });
   });
+
+  // Handle pagination for habit list
+  bot.callbackQuery(/^habits_page_(\d+)$/, async (ctx) => {
+    const page = parseInt(ctx.match[1] || "0");
+    await ctx.answerCallbackQuery();
+    await ctx.deleteMessage();
+    await listHabits(ctx, page);
+  });
+
+  // Handle noop callback (for page indicator button)
+  bot.callbackQuery("noop", async (ctx) => {
+    await ctx.answerCallbackQuery();
+  });
+
 
   // Other text from chat
   bot.on("message:text", (ctx) => {
