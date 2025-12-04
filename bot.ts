@@ -34,7 +34,7 @@ async function main() {
   // Set Bot Commands
   await bot.api.setMyCommands([
 
-    { command: "start", description: "Start a conversation with me" },
+    { command: "onboarding", description: "Start onboarding" },
 
     { command: "help", description: "Show help message" },
 

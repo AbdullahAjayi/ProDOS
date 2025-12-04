@@ -7,19 +7,19 @@ import createHabit from "./logic/habit/createHabit.js";
 import { createUserFromSession } from "./db/helpers/userHelper.js";
 
 export function registerOnboarding(bot: Bot<MySessionContext>) {
-    const startCommand = async (conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) => {
+    const onboarding = async (conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) => {
 
         const name = await askForName(conversation, ctx);
         const purpose = await askForMainPurpose(conversation, ctx);
         const email = await askForEmail(conversation, ctx);
-        const { emailOption } = email;
+        const { emailAddress } = email;
 
         // Save user to database first
         try {
             await conversation.external(async () => {
                 const tempUserData = {
                     name,
-                    email: email.email || "",
+                    email: emailAddress,
                     purpose,
                 };
 
@@ -35,7 +35,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
 
         // Then save user habit
         try {
-            const habit = await createHabit(conversation, ctx, emailOption);
+            const habit = await createHabit(conversation, ctx);
         } catch (err) {
             console.error("Error creating habit:", err);
             await ctx.reply("❌ There was an error creating your habit. Please try again.", {
@@ -50,12 +50,12 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
         });
     };
 
-    bot.use(createConversation(startCommand, "startCommand"));
+    bot.use(createConversation(onboarding, "onboarding"));
 
     const inlineKeyboard = new InlineKeyboard()
         .text("Let's begin ✨", "onboard_user");
 
-    bot.command("start", async (ctx) =>
+    bot.command(["start", "onboarding"], async (ctx) =>
         await ctx.reply(
             "👋 Hi, I’m ProDOS — your calm space for focus, discipline, and habit-building. \n\nTogether, we’ll create small, consistent routines that shape who you become. \n\nShall we begin?",
             { reply_markup: inlineKeyboard }
@@ -64,7 +64,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
 
     bot.callbackQuery("onboard_user", async (ctx) => {
         await ctx.answerCallbackQuery();
-        await ctx.conversation.enter('startCommand');
+        await ctx.conversation.enter('onboarding');
     });
 }
 
@@ -114,23 +114,27 @@ async function askForMainPurpose(conversation: Conversation<MySessionContext, My
 
 async function askForEmail(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) {
     await ctx.reply(
-        "Nice choice \n\nWould you like to link an email? \nThis helps me sync your progress to web when that feature launches (optional).",
-        {
-            reply_markup: new InlineKeyboard().text("Add email ✉️").text("Skip ⏭️"),
-        }
+        "Nice choice \n\nKindly provide me your email? \nThis helps me sync your progress to web when that feature launches.\n\n Ensure you type it correctly (e.g ibrahimsalako@gmail.com)",
     );
 
-    const emailQuery = await conversation.waitFor("callback_query:data");
-    const emailOption = emailQuery.callbackQuery.data;
-    await emailQuery.answerCallbackQuery();
+    // Email validation regex
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-    if (emailOption === "Add email ✉️") {
-        await ctx.reply("What's your email address?");
+    let emailAddress = "";
+    let isValid = false;
+
+    while (!isValid) {
         const { message } = await conversation.waitFor("message:text");
-        await ctx.reply("Your email has been saved successfully!");
-        await delay(800, 1300);
-        return { emailOption, email: message.text };
+        emailAddress = message.text.trim();
+
+        if (emailRegex.test(emailAddress)) {
+            isValid = true;
+            await ctx.reply("✅ Nice. Your email has been saved successfully!");
+            await delay(800, 1300);
+        } else {
+            await ctx.reply("❌ That doesn't look like a valid email. Please try again (e.g., ibrahimsalako@gmail.com):");
+        }
     }
 
-    return { emailOption, email: null };
+    return { emailAddress };
 }

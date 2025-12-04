@@ -22,21 +22,15 @@ function getDaysKeyboard(selectedDays: string[]) {
     return keyboard;
 }
 
-async function createHabit(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext, emailOption?: string | null) {
-    emailOption && await ctx.reply(
-        `${emailOption === "Add email ✉️" ? "Now...\n" : "Alright. "}Let’s begin with one small habit you’d like to start building. \n\n<b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`,
+async function createHabit(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) {
+    await ctx.reply(
+        `Let’s begin with one small habit you’d like to start building. \n\n<b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`,
         {
             parse_mode: "HTML",
         }
     );
 
-    !emailOption && await ctx.reply(
-        `Nice, <b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`,
-        {
-            parse_mode: "HTML",
-        })
     const habitRes = await conversation.waitFor("message:text");
-
     const habitName = habitRes.message?.text || "Unnamed habit";
 
     await ctx.reply(
