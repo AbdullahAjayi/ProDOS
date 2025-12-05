@@ -9,6 +9,7 @@ import { connectDB } from "./db/index.js";
 import { initializeReminderService } from "./logic/reminders/reminderService.js";
 import { listHabits } from "./logic/habit/listHabits.js";
 import { logHabitSimple } from "./logic/habit/logHabit.js";
+import { deleteHabit, confirmDeleteHabit, cancelDelete } from "./logic/habit/deleteHabit.js";
 // import updateHabitConversation from "./logic/habit/updateHabit";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
@@ -82,6 +83,9 @@ async function main() {
           { text: "✅ Log Habit", callback_data: `log_habit_${habitId}` },
           { text: "📝 Update Habit", callback_data: `update_habit_${habitId}` },
         ],
+        [
+          { text: "🗑️ Delete Habit", callback_data: `delete_habit_${habitId}` },
+        ],
       ],
     };
 
@@ -110,6 +114,32 @@ async function main() {
   // Handle noop callback (for page indicator button)
   bot.callbackQuery("noop", async (ctx) => {
     await ctx.answerCallbackQuery();
+  });
+
+  // Handle delete habit callback
+  bot.callbackQuery(/^delete_habit_(.+)$/, async (ctx) => {
+    const habitId = ctx.match[1];
+    if (!habitId) {
+      await ctx.answerCallbackQuery({ text: "❌ Invalid habit ID", show_alert: true });
+      return;
+    }
+    await deleteHabit(ctx, habitId);
+  });
+
+  // Handle confirm delete callback
+  bot.callbackQuery(/^confirm_delete_(.+)$/, async (ctx) => {
+    const habitId = ctx.match[1];
+    if (!habitId) {
+      await ctx.answerCallbackQuery({ text: "❌ Invalid habit ID", show_alert: true });
+      return;
+    }
+    await confirmDeleteHabit(ctx, habitId);
+
+  });
+
+  // Handle cancel delete callback
+  bot.callbackQuery("cancel_delete", async (ctx) => {
+    await cancelDelete(ctx);
   });
 
 
