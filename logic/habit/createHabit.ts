@@ -156,7 +156,6 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
     // first read (this is the message from the custom keyboard or user's typed time)
     const timeRes = await conversation.waitFor("message:text");
     const chosenTime = timeRes.message.text.trim();
-    console.log("[time][first] ", chosenTime); // trace of first input
 
     if (chosenTime === "⏰ Custom Time") {
         // user chose custom — stay in a dedicated loop until a valid time is given
@@ -171,7 +170,6 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
             const customRes = await conversation.waitFor("message:text");
             reminderTime = customRes.message.text.trim();
 
-            console.log("[time][custom input] ", reminderTime);
             // normalize (remove emojis / extra chars) before validating
             const normalized = reminderTime.replace(/[^\d:APMapm ]/g, "").trim();
 
@@ -184,7 +182,6 @@ async function createHabit(conversation: Conversation<MySessionContext, MySessio
 
             // valid -> use normalized form
             reminderTime = normalized;
-            console.log("[time][valid] ", reminderTime);
             break;
         }
     } else {
