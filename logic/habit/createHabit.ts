@@ -22,9 +22,13 @@ function getDaysKeyboard(selectedDays: string[]) {
     return keyboard;
 }
 
-async function createHabit(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext) {
+async function createHabit(conversation: Conversation<MySessionContext, MySessionContext>, ctx: MySessionContext, isOnboarding: boolean = false) {
+    const greeting = isOnboarding
+        ? "Now... let's begin with one small habit you'd like to start building.\n\n"
+        : "";
+
     await ctx.reply(
-        `Let’s begin with one small habit you’d like to start building. \n\n<b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`,
+        `${greeting}<b>What new habit would you like to create?</b>\n\n(Something simple — like Reading or Journaling. Other details will follow shortly)`,
         {
             parse_mode: "HTML",
         }

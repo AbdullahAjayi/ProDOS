@@ -35,7 +35,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
 
         // Then save user habit
         try {
-            const habit = await createHabit(conversation, ctx);
+            const habit = await createHabit(conversation, ctx, true);
         } catch (err) {
             console.error("Error creating habit:", err);
             await ctx.reply("❌ There was an error creating your habit. Please try again.", {
