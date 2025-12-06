@@ -55,15 +55,9 @@ async function main() {
 
   // Set Bot Commands
   await bot.api.setMyCommands([
-
-    { command: "onboarding", description: "Start onboarding" },
-
-    { command: "help", description: "Show help message" },
-
     { command: "create_habit", description: "Create a new habit" },
-
     { command: "list_habits", description: "List all your habits" },
-
+    { command: "help", description: "Show help message" },
     { command: "cancel", description: "Cancel current operation" },
   ])
     .catch(err => console.log(err))
