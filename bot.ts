@@ -72,6 +72,36 @@ async function main() {
   // List habits command
   bot.command('list_habits', async (ctx) => await listHabits(ctx));
 
+  // Help command
+  bot.command('help', async (ctx) => {
+    const helpMessage = `
+🤖 <b>ProDOS Bot - Help</b>
+
+<b>📋 Habit Management</b>
+<b>/create_habit</b> - Create a new habit
+<b>/list_habits</b> - View all your habits
+
+<b>🛠️ Other Commands</b>
+<b>/help</b> - Show this help message
+<b>/cancel</b> - Cancel current operation
+
+<b>💡 Understanding ProDOS</b>
+
+<b>Habit Types:</b>
+• <b><code>✅ Yes/No Habits</code></b>: e.g., "Did I meditate today?"
+• <b><code>🎯 Measurable Habits</code></b>: quantifiable habits (e.g., "I read 20 pages today", "I ran 5km this morning!")
+
+<b>From /list_habits you can:</b>
+• <b>✅ Log</b> your habit progress for the day
+• <b>📝 Update</b> habit details (name, type, frequency, target, reminder time)
+• <b>🗑️ Delete</b> habits you no longer need
+
+Need more help or have a suggestion? Contact <a href="https://t.me/abdullahajayi">Abdullah</a>
+    `.trim();
+
+    await ctx.reply(helpMessage, { parse_mode: 'HTML' });
+  });
+
   // Cancel operation command
   bot.command('cancel', async (ctx) => {
     await ctx.reply("❌ Operation cancelled.");
