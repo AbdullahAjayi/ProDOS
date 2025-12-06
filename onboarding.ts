@@ -48,6 +48,7 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
         await ctx.reply("<b>🎉 You're all set! Welcome aboard ProDOS 🚀</b>", {
             reply_markup: { remove_keyboard: true }, parse_mode: "HTML",
         });
+        console.log(`New user added successfully: ${ctx.from?.username}`)
     };
 
     bot.use(createConversation(onboarding, "onboarding"));
