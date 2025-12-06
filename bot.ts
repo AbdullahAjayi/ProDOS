@@ -30,6 +30,26 @@ async function main() {
     // storage: adapter as any
   }));
 
+  // Middleware: Exit active conversation when a command is received
+  bot.on('message:text', async (ctx, next) => {
+    const text = ctx.message.text;
+    // Check if message is a command (starts with /)
+    if (text.startsWith('/')) {
+      // Get list of active conversations
+      const activeConversations = ['createHabit', 'updateHabit'];
+
+      // Try to exit all possible conversations
+      for (const convoName of activeConversations) {
+        try {
+          await ctx.conversation.exit(convoName);
+        } catch {
+          // Conversation wasn't active, ignore
+        }
+      }
+    }
+    await next();
+  });
+
   // Initialize reminder service (loads reminders in background)
   initializeReminderService(bot as any);
 
@@ -44,8 +64,7 @@ async function main() {
 
     { command: "list_habits", description: "List all your habits" },
 
-    // { command: "update_habit", description: "Update a habit" },
-
+    { command: "cancel", description: "Cancel current operation" },
   ])
     .catch(err => console.log(err))
 
@@ -58,6 +77,11 @@ async function main() {
 
   // List habits command
   bot.command('list_habits', async (ctx) => await listHabits(ctx));
+
+  // Cancel operation command
+  bot.command('cancel', async (ctx) => {
+    await ctx.reply("❌ Operation cancelled.");
+  });
 
   // Update habit conversation
   bot.use(createConversation(updateHabit));
