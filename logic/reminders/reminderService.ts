@@ -26,7 +26,7 @@ async function loadExistingReminders(): Promise<void> {
         }).populate("userId");
 
         const schedulePromises = habits.map(async (habit) => {
-            const user = await User.findById(habit.userId);
+            const user = habit.userId as any;
             if (user && habit.reminderTime) {
                 await scheduleReminder(habit, user.telegramId);
                 return true;
