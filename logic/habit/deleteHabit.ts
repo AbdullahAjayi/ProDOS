@@ -61,5 +61,5 @@ export async function confirmDeleteHabit(ctx: MySessionContext, habitId: string)
  */
 export async function cancelDelete(ctx: MySessionContext): Promise<void> {
     await ctx.answerCallbackQuery({ text: "Deletion cancelled", show_alert: false });
-    await ctx.editMessageText("❌ Deletion cancelled. Your habit is safe! 🌱");
+    await ctx.editMessageText("❌ Deletion cancelled. Your habit is safe!");
 }
