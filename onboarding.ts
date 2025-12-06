@@ -56,11 +56,13 @@ export function registerOnboarding(bot: Bot<MySessionContext>) {
     const inlineKeyboard = new InlineKeyboard()
         .text("Let's begin ✨", "onboard_user");
 
-    bot.command(["start", "onboarding"], async (ctx) =>
+    bot.command(["start", "onboarding"], async (ctx) => {
+        console.log('Someone started the bot')
         await ctx.reply(
             "👋 Hi, I’m ProDOS — your calm space for focus, discipline, and habit-building. \n\nTogether, we’ll create small, consistent routines that shape who you become. \n\nShall we begin?",
             { reply_markup: inlineKeyboard }
         )
+    }
     );
 
     bot.callbackQuery("onboard_user", async (ctx) => {
