@@ -10,7 +10,8 @@ import { initializeReminderService } from "./logic/reminders/reminderService.js"
 import { listHabits } from "./logic/habit/listHabits.js";
 import { logHabitSimple } from "./logic/habit/logHabit.js";
 import { deleteHabit, confirmDeleteHabit, cancelDelete } from "./logic/habit/deleteHabit.js";
-// import updateHabitConversation from "./logic/habit/updateHabit";
+import updateHabit from "./logic/habit/updateHabit.js";
+import { Habit } from "./db/models/Habit.js";
 
 const BOT_TOKEN = process.env.BOT_TOKEN!;
 if (!BOT_TOKEN) {
@@ -58,9 +59,21 @@ async function main() {
   // List habits command
   bot.command('list_habits', async (ctx) => await listHabits(ctx));
 
-  // Update habit command
-  // bot.use(createConversation(updateHabitConversation, "updateHabit"));
-  // bot.command('update_habit', async (ctx) => await ctx.conversation.enter("updateHabit"));
+  // Update habit conversation
+  bot.use(createConversation(updateHabit));
+  bot.callbackQuery(/^update_habit_(.+)/, async (ctx) => {
+    const habitId = ctx.match[1];
+    const habit = await Habit.findById(habitId).populate('userId');
+
+    if (!habit) {
+      await ctx.answerCallbackQuery({ text: "❌ Habit not found", show_alert: true });
+      return;
+    }
+
+    await ctx.answerCallbackQuery();
+    console.log(`About to update habit "${habit.name}" for ${(habit.userId as any)?.name || 'unfound user'}`);
+    await ctx.conversation.enter("updateHabit", habitId);
+  })
 
   // Handle callback queries for logging habits
   bot.callbackQuery(/^log_habit_(.+)$/, async (ctx) => {
@@ -90,12 +103,6 @@ async function main() {
     };
 
     await ctx.reply("What would you like to do?", { reply_markup: keyboard });
-  });
-
-  // Handle update habit callback
-  bot.callbackQuery(/^update_habit_(.+)$/, async (ctx) => {
-    const habitId = ctx.match[1];
-    await ctx.conversation.enter("updateHabit", { habitId });
   });
 
   // Handle skip reminder callback
